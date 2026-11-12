@@ -1,0 +1,1165 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cálculo de Roscas</title>
+<meta name="description" content="Cálculo de rosca métrica ISO para impressão 3D (folga pelo erro da impressora) e usinagem (ISO 965-1, 6H/6g).">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231d1d1b'/%3E%3Cpath d='M4 20l4-8 4 8 4-8 4 8 4-8 4 8' fill='none' stroke='%23e4032e' stroke-width='2.6' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ---------- Paleta Razek ---------- */
+:root{
+  --rzk-escarlate:#e4032e; --rzk-inox:#c6c6c6; --rzk-niquel:#9d9d9c;
+  --rzk-titanio:#3c3c3b;   --rzk-bordo:#c61932;  --rzk-grafite:#1d1d1b;
+
+  --bg:#f2f2f1; --surface:#ffffff; --surface-2:#f7f7f6; --line:#e4e4e3; --line-strong:#c6c6c6;
+  --text:#1d1d1b; --text-2:#3c3c3b; --muted:#6c6c6b;
+  --accent:#e4032e; --accent-strong:#c61932; --accent-soft:rgba(228,3,46,.08); --accent-line:rgba(228,3,46,.35);
+  --macho-fill:#c6c6c6; --macho-stroke:#3c3c3b;
+  --femea-fill:rgba(198,25,50,.16); --femea-stroke:#c61932;
+  --ghost:#9d9d9c; --dim:#3c3c3b; --plot-bg:#fafaf9;
+  --shadow:0 1px 2px rgba(29,29,27,.04),0 4px 16px rgba(29,29,27,.05);
+  --radius:14px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#141413; --surface:#1d1d1b; --surface-2:#242422; --line:#2d2d2b; --line-strong:#3c3c3b;
+    --text:#f1f1f0; --text-2:#c6c6c6; --muted:#9d9d9c;
+    --accent:#e4032e; --accent-strong:#ff2d4f; --accent-soft:rgba(228,3,46,.14); --accent-line:rgba(228,3,46,.45);
+    --macho-fill:#6f6f6e; --macho-stroke:#c6c6c6;
+    --femea-fill:rgba(228,3,46,.22); --femea-stroke:#e4032e;
+    --ghost:#9d9d9c; --dim:#c6c6c6; --plot-bg:#191918;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141413; --surface:#1d1d1b; --surface-2:#242422; --line:#2d2d2b; --line-strong:#3c3c3b;
+  --text:#f1f1f0; --text-2:#c6c6c6; --muted:#9d9d9c;
+  --accent:#e4032e; --accent-strong:#ff2d4f; --accent-soft:rgba(228,3,46,.14); --accent-line:rgba(228,3,46,.45);
+  --macho-fill:#6f6f6e; --macho-stroke:#c6c6c6;
+  --femea-fill:rgba(228,3,46,.22); --femea-stroke:#e4032e;
+  --ghost:#9d9d9c; --dim:#c6c6c6; --plot-bg:#191918;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:Poppins,system-ui,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.mono,code,.num{font-family:"JetBrains Mono",ui-monospace,Consolas,monospace}
+button,input,select{font:inherit;color:inherit}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.01em}
+
+/* ---------- Header ---------- */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1480px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:14px}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--rzk-grafite);display:grid;place-items:center;flex:none;border:1px solid var(--line-strong)}
+.brand h1{font-size:17px}
+.brand p{margin:0;color:var(--muted);font-size:12px}
+.top .spacer{flex:1}
+.desig{font-family:"JetBrains Mono",monospace;font-weight:500;font-size:15px;padding:6px 12px;border-radius:999px;background:var(--accent-soft);color:var(--accent-strong);border:1px solid var(--accent-line);white-space:nowrap}
+.icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;flex:none}
+.icon-btn:hover{border-color:var(--line-strong)}
+
+/* ---------- Layout ---------- */
+.app{max-width:1480px;margin:0 auto;padding:24px;display:grid;grid-template-columns:320px minmax(0,1fr);gap:24px;align-items:start}
+aside.panel{position:sticky;top:86px;max-height:calc(100vh - 110px);overflow:auto;scrollbar-width:thin}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.panel .card{padding:18px}
+.group+.group{margin-top:20px;padding-top:20px;border-top:1px solid var(--line)}
+.group-h{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.group-h::before{content:"";width:6px;height:6px;border-radius:2px;background:var(--accent)}
+
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field label{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:var(--text-2);margin-bottom:6px;font-weight:500}
+.field label small{color:var(--muted);font-weight:400}
+.inp{display:flex;align-items:center;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;transition:border-color .15s,box-shadow .15s}
+.inp:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.inp input{flex:1;min-width:0;border:0;background:transparent;padding:9px 12px;font-family:"JetBrains Mono",monospace;font-size:14px;outline:none}
+.inp .unit{padding:0 12px;color:var(--muted);font-size:12px}
+.inp input::-webkit-outer-spin-button,.inp input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.inp input[type=number]{-moz-appearance:textfield}
+.inp.bad{border-color:var(--accent)}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.inp input{width:100%}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:3px 9px;font-size:12px;font-family:"JetBrains Mono",monospace;cursor:pointer;color:var(--text-2);transition:all .12s}
+.chip:hover{border-color:var(--line-strong);color:var(--text)}
+.chip.on{background:var(--text);color:var(--surface);border-color:var(--text)}
+
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:var(--line);margin:12px 0 2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--accent);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--accent);cursor:pointer}
+
+.seg{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;padding:6px 0;border-radius:7px;cursor:pointer;font-family:"JetBrains Mono",monospace;font-weight:500;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.seg.text button{font-family:Poppins,sans-serif;font-size:12.5px}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+
+/* ---------- Main ---------- */
+main{min-width:0;display:flex;flex-direction:column;gap:24px}
+.vis{padding:20px 20px 16px}
+.vis-head{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;margin-bottom:14px}
+.vis-head h2{font-size:16px}
+.vis-head .sub{color:var(--muted);font-size:12.5px}
+.vis-head .spacer{flex:1}
+.scen{display:flex;flex-wrap:wrap;gap:6px}
+.scen button{border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:6px 10px;cursor:pointer;font-size:12px;text-align:left;line-height:1.25;color:var(--text-2);display:flex;align-items:center;gap:8px}
+.scen button:hover{border-color:var(--line-strong)}
+.scen button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--text)}
+.scen button b{font-family:"JetBrains Mono",monospace;font-weight:500}
+.scen .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.scen-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-right:2px;align-self:center}
+
+.plot{background:var(--plot-bg);border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative}
+.plot svg{display:block;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px;font-size:12px;color:var(--text-2)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.sw{width:18px;height:10px;border-radius:3px;display:inline-block}
+.sw.m{background:var(--macho-fill);border:1.5px solid var(--macho-stroke)}
+.sw.f{background:var(--femea-fill);border:1.5px solid var(--femea-stroke)}
+.sw.g{border:1.5px dashed var(--ghost);background:transparent}
+.sw.p{height:0;border-top:1.5px dashed var(--muted);border-radius:0;width:18px}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+.stat{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+.stat .k{font-size:11.5px;color:var(--muted);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat .v{font-family:"JetBrains Mono",monospace;font-size:20px;font-weight:500;letter-spacing:-.02em;white-space:nowrap}
+.stat .v small{font-size:12px;color:var(--muted);margin-left:3px;font-weight:400}
+.stat .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+
+.over{margin-top:16px}
+.over-h{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
+.over-h h3{font-size:13px}
+.over-h span{font-size:12px;color:var(--muted)}
+
+/* ---------- Status ---------- */
+.st{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;border:1px solid}
+.st.ok{color:var(--text-2);border-color:var(--line-strong);background:var(--surface-2)}
+.st.warn{color:var(--accent-strong);border-color:var(--accent-line);background:var(--accent-soft)}
+.st.bad{color:#fff;border-color:var(--rzk-bordo);background:var(--rzk-bordo)}
+
+/* ---------- Tabs ---------- */
+.tabs-card{padding:0;overflow:hidden}
+.tabs{display:flex;gap:2px;padding:8px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;background:var(--surface-2)}
+.tabs::-webkit-scrollbar{display:none}
+.tab{border:0;background:transparent;padding:11px 16px 12px;cursor:pointer;color:var(--muted);font-weight:500;font-size:13px;white-space:nowrap;border-radius:10px 10px 0 0;position:relative}
+.tab:hover{color:var(--text)}
+.tab.on{color:var(--text);background:var(--surface)}
+.tab.on::after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:2px;background:var(--accent);border-radius:2px}
+.tab-body{padding:22px}
+.sec-title{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:26px 0 12px}
+.sec-title:first-child{margin-top:0}
+.sec-title h3{font-size:14px}
+.sec-title span{color:var(--muted);font-size:12px}
+
+/* ---------- Tables ---------- */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+th{font-size:11.5px;font-weight:600;color:var(--muted);background:var(--surface-2);white-space:nowrap;letter-spacing:.02em}
+th.c,td.c{text-align:center}
+th.r,td.r{text-align:right}
+td.num{text-align:right;white-space:nowrap;cursor:copy;font-size:13px}
+td.num:hover{color:var(--accent-strong)}
+td.idx{width:44px;color:var(--muted);font-family:"JetBrains Mono",monospace}
+td.desc{min-width:220px}
+tr.yes td{background:var(--accent-soft)}
+tr.yes td.idx{color:var(--accent-strong);font-weight:600}
+th.sel,td.sel{box-shadow:inset 0 0 0 9999px color-mix(in srgb,var(--accent) 7%,transparent)}
+th.sel{color:var(--accent-strong)}
+th.clickable{cursor:pointer}
+th.clickable:hover{color:var(--text)}
+.tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;border:1px solid var(--line-strong);color:var(--muted);white-space:nowrap}
+.tag.yes{border-color:var(--accent-line);color:var(--accent-strong);background:var(--surface)}
+tr.hl td{background:var(--accent-soft)}
+td.hl{color:var(--accent-strong);font-weight:600}
+.muted{color:var(--muted)}
+
+/* KV list */
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.kv .it{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+.kv .it .l{font-size:12.5px;color:var(--text-2)}
+.kv .it .v{font-family:"JetBrains Mono",monospace;font-size:13px;white-space:nowrap;cursor:copy;text-align:right}
+.kv .it .v:hover{color:var(--accent-strong)}
+.kv .it.em{border-color:var(--accent-line);background:var(--accent-soft)}
+
+/* Formula cards (Métrica) */
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.fc{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface-2);cursor:copy;transition:border-color .12s}
+.fc:hover{border-color:var(--accent-line)}
+.fc .sym{display:flex;justify-content:space-between;align-items:baseline}
+.fc .sym b{font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:500}
+.fc .sym span{font-size:11px;color:var(--muted)}
+.fc .nm{font-size:12px;color:var(--text-2);margin:2px 0 8px}
+.fc .val{font-family:"JetBrains Mono",monospace;font-size:19px;letter-spacing:-.02em}
+.fc .val small{font-size:12px;color:var(--muted)}
+.fc .fx{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted);margin-top:4px}
+.fc.input{border-color:var(--accent-line);background:var(--accent-soft)}
+
+/* Notes / callouts */
+.callout{border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:12px 16px;background:var(--surface-2);font-size:13px;color:var(--text-2);margin-bottom:16px}
+.callout b{color:var(--text)}
+.notes{margin:0;padding:0;list-style:none;display:grid;gap:8px;counter-reset:n}
+.notes li{position:relative;padding-left:30px;font-size:13px;color:var(--text-2)}
+.notes li::before{counter-increment:n;content:counter(n);position:absolute;left:0;top:1px;width:20px;height:20px;border-radius:6px;background:var(--surface-2);border:1px solid var(--line);font-size:11px;display:grid;place-items:center;font-family:"JetBrains Mono",monospace;color:var(--muted)}
+
+details.ref{border:1px solid var(--line);border-radius:12px;margin-top:22px;background:var(--surface-2)}
+details.ref summary{cursor:pointer;padding:12px 16px;font-weight:500;font-size:13px;list-style:none;display:flex;align-items:center;gap:8px}
+details.ref summary::-webkit-details-marker{display:none}
+details.ref summary::before{content:"";width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);transition:transform .15s;margin-right:4px}
+details.ref[open] summary::before{transform:rotate(45deg)}
+details.ref summary span{color:var(--muted);font-weight:400;font-size:12px}
+.ref-imgs{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px 16px}
+.ref-imgs img{width:100%;border-radius:8px;border:1px solid var(--line);background:#fff;display:block}
+
+.r40{display:flex;flex-wrap:wrap;gap:5px}
+.r40 span{font-family:"JetBrains Mono",monospace;font-size:11.5px;padding:2px 7px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}
+.r40 span.hl{border-color:var(--accent);color:var(--accent-strong);background:var(--accent-soft)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px;align-items:start;margin-top:26px}
+.grid2:first-child{margin-top:0}
+.callout+.grid2{margin-top:0}
+
+.warnbar{display:none;margin-top:10px;padding:8px 12px;border-radius:10px;font-size:12.5px;background:var(--accent-soft);color:var(--accent-strong);border:1px solid var(--accent-line)}
+.warnbar.show{display:block}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;background:var(--text);color:var(--surface);padding:9px 16px;border-radius:999px;font-size:13px;pointer-events:none;transition:all .2s;z-index:50;font-family:"JetBrains Mono",monospace}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+footer{max-width:1480px;margin:0 auto;padding:8px 24px 40px;color:var(--muted);font-size:12px}
+
+/* SVG text */
+.svg-t{font-family:"JetBrains Mono",monospace;font-size:13px;fill:var(--text-2)}
+.svg-t.s{font-size:11.5px;fill:var(--muted)}
+.svg-t.a{fill:var(--accent-strong);font-weight:500}
+
+@media (max-width:1100px){
+  .app{grid-template-columns:1fr}
+  aside.panel{position:static;max-height:none}
+  .panel .card{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0 28px}
+  .group+.group{margin-top:0;padding-top:0;border-top:0}
+  .group{padding-bottom:18px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid2{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .top-in{padding:12px 16px}
+  .brand p{display:none}
+  .app{padding:16px;gap:16px}
+  .tab-body{padding:16px}
+  .vis{padding:14px}
+  .ref-imgs{grid-template-columns:1fr}
+  .stat .v{font-size:17px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="logo" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 32 32"><path d="M3 21l4.3-9 4.3 9 4.3-9 4.3 9 4.3-9 4.3 9" fill="none" stroke="#e4032e" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    </div>
+    <div class="brand">
+      <h1>Cálculo de Roscas</h1>
+      <p>Rosca métrica ISO · impressão 3D e usinagem (ISO 965-1)</p>
+    </div>
+    <div class="spacer"></div>
+    <div class="desig" id="desig">M15 × 0,75</div>
+    <button class="icon-btn" id="themeBtn" title="Alternar tema" aria-label="Alternar tema">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="app">
+  <!-- ================= ENTRADAS ================= -->
+  <aside class="panel">
+    <div class="card">
+      <div class="group">
+        <div class="group-h">Rosca</div>
+        <div class="field">
+          <label for="inP">Passo P <small>mm</small></label>
+          <div class="inp"><input id="inP" type="number" step="0.05" min="0.05" inputmode="decimal"><span class="unit">mm</span></div>
+          <div class="chips" id="chipsP"></div>
+        </div>
+        <div class="field">
+          <label for="inD">Ø nominal d <small>mm</small></label>
+          <div class="inp"><input id="inD" type="number" step="0.5" min="0.5" inputmode="decimal"><span class="unit">mm</span></div>
+          <input type="range" id="rgD" min="1" max="64" step="0.5" aria-label="Ø nominal">
+          <div class="chips" id="chipsD"></div>
+        </div>
+        <div class="warnbar" id="geoWarn"></div>
+      </div>
+
+      <div class="group">
+        <div class="group-h">Erro da impressora</div>
+        <div class="row2">
+          <div class="field">
+            <label for="inE1">Erro 1</label>
+            <div class="inp"><input id="inE1" type="number" step="0.01" min="0" inputmode="decimal"><span class="unit">mm</span></div>
+          </div>
+          <div class="field">
+            <label for="inE2">Erro 2</label>
+            <div class="inp"><input id="inE2" type="number" step="0.01" min="0" inputmode="decimal"><span class="unit">mm</span></div>
+          </div>
+          <div class="field">
+            <label for="inK1">Fator k mín.</label>
+            <div class="inp"><input id="inK1" type="number" step="0.1" min="0" inputmode="decimal"></div>
+          </div>
+          <div class="field">
+            <label for="inK2">Fator k máx.</label>
+            <div class="inp"><input id="inK2" type="number" step="0.1" min="0" inputmode="decimal"></div>
+          </div>
+        </div>
+        <div class="hint">Folga no flanco g = k × erro · δ radial = 2g</div>
+      </div>
+
+      <div class="group">
+        <div class="group-h">Usinagem · ISO 965-1</div>
+        <div class="field">
+          <label>Classe do macho <small>fêmea: H (EI = 0)</small></label>
+          <div class="seg" id="segCls">
+            <button data-v="h">6h</button><button data-v="g">6g</button><button data-v="f">6f</button><button data-v="e">6e</button>
+          </div>
+          <div class="hint">g = padrão 6g · f e e = mais folga · h = sem folga</div>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-h">Exibição</div>
+        <div class="field">
+          <label>Casas decimais</label>
+          <div class="seg" id="segDec"><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button></div>
+        </div>
+        <div class="field">
+          <label>Separador decimal <small>ao copiar p/ CAD</small></label>
+          <div class="seg text" id="segSep"><button data-v=",">Vírgula 0,75</button><button data-v=".">Ponto 0.75</button></div>
+        </div>
+        <div class="hint">Clique em qualquer valor para copiá-lo.</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= CONTEÚDO ================= -->
+  <main>
+    <section class="card vis" aria-label="Visualização do perfil">
+      <div class="vis-head">
+        <div>
+          <h2>Perfil da rosca em tempo real</h2>
+          <div class="sub" id="visSub">Corte axial · escala real</div>
+        </div>
+        <div class="spacer"></div>
+      </div>
+      <div class="vis-head" style="margin-top:-4px">
+        <span class="scen-label">3D</span>
+        <div class="scen" id="scen3d"></div>
+        <span class="scen-label">Usinagem</span>
+        <div class="scen" id="scenUs"></div>
+      </div>
+
+      <div class="plot" id="plotProfile"></div>
+      <div class="legend" id="legend"></div>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="over">
+        <div class="over-h"><h3>Vista geral</h3><span id="overSub">macho com a fêmea em corte</span></div>
+        <div class="plot" id="plotOver"></div>
+      </div>
+    </section>
+
+    <section class="card tabs-card">
+      <nav class="tabs" id="tabs" role="tablist">
+        <button class="tab" data-t="metrica">Métrica</button>
+        <button class="tab" data-t="m3d">Macho 3D</button>
+        <button class="tab" data-t="f3d">Fêmea 3D</button>
+        <button class="tab" data-t="mus">Macho usinagem</button>
+        <button class="tab" data-t="fus">Fêmea usinagem</button>
+        <button class="tab" data-t="iso">Tabela ISO 965</button>
+      </nav>
+      <div class="tab-body" id="tabBody"></div>
+    </section>
+  </main>
+</div>
+
+<footer>Valores práticos de projeto. Dados ISO 965-1 conforme a planilha original (fonte: tabelas publicadas em machiningdoctor.com); confira na norma para tolerâncias críticas.</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   DADOS ISO 965-1 (µm) — idênticos à aba "ISO965" da planilha
+   ===================================================================== */
+const ISO_P = [ // [P, es g, es f, es e, Td(6), TD1(6)]
+  [0.25,18,null,null,67,null],[0.3,18,null,null,75,85],[0.35,19,34,null,85,100],[0.4,19,34,null,95,112],
+  [0.45,20,35,null,100,125],[0.5,20,36,50,106,140],[0.6,21,36,53,125,160],[0.7,22,38,56,140,180],
+  [0.75,22,38,56,140,190],[0.8,24,38,60,150,200],[1,26,40,60,180,236],[1.25,28,42,63,212,265],
+  [1.5,32,45,67,236,300],[1.75,34,48,71,265,335],[2,38,52,71,280,375],[2.5,42,58,80,335,450],
+  [3,48,63,85,375,500],[3.5,53,70,90,425,560],[4,60,75,95,475,600],[4.5,63,80,100,500,670],
+  [5,71,85,106,530,710],[5.5,75,90,112,560,750],[6,80,95,118,600,800]
+];
+const R40 = [50,53,56,60,63,67,71,75,80,85,90,95,100,106,112,118,125,132,140,150,160,170,180,190,200,212,224,236,250,265,280,300,315,335,355,375,400,425,450,475,500,530,560,600,630,670,710,750,800,850,900,950,1000];
+const FAIXAS = [[0.99,1.4],[1.4,2.8],[2.8,5.6],[5.6,11.2],[11.2,22.4],[22.4,45],[45,90],[90,180]];
+const TD2_TAB = [ // [faixa nº, P, Td2(6), TD2(6)]
+  [2,0.2,48,null],[2,0.25,56,null],[2,0.3,56,75],[2,0.35,63,85],[2,0.4,67,90],[2,0.45,71,95],
+  [3,0.35,67,90],[3,0.5,75,100],[3,0.6,85,112],[3,0.7,90,118],[3,0.75,90,118],[3,0.8,95,125],
+  [4,0.75,100,132],[4,1,112,150],[4,1.25,118,160],[4,1.5,132,180],
+  [5,1,118,160],[5,1.25,132,180],[5,1.5,140,190],[5,1.75,150,200],[5,2,160,212],[5,2.5,170,224],
+  [6,1,125,170],[6,1.5,150,200],[6,2,170,224],[6,3,200,265],[6,3.5,212,280],[6,4,224,300],[6,4.5,236,315],
+  [7,1.5,160,212],[7,2,180,236],[7,3,212,280],[7,4,236,315],[7,5,250,335],[7,5.5,265,355],[7,6,280,375]
+];
+const CLS_COL = {g:1,f:2,e:3};
+const PITCH_CHIPS = [0.5,0.7,0.75,0.8,1,1.25,1.5,1.75,2,2.5,3];
+const D_CHIPS = [3,4,5,6,8,10,12,15,16,20,24];
+const TAN30 = Math.tan(Math.PI/6);
+
+/* =====================================================================
+   ESTADO
+   ===================================================================== */
+const DEFAULTS = {P:0.75,d:15,e1:0.1,e2:0.2,k1:1,k2:1.5,cls:"g",view:"p0",tab:"f3d",dec:3,sep:","};
+const state = Object.assign({}, DEFAULTS);
+(function load(){
+  try{ const s = JSON.parse(localStorage.getItem("rosca-state")||"{}"); Object.assign(state, s); }catch(e){}
+  try{
+    const q = new URLSearchParams(location.search);
+    const num = k => { const v = parseFloat(q.get(k)); return isFinite(v) ? v : undefined; };
+    [["P","p"],["d","d"],["e1","e1"],["e2","e2"],["k1","k1"],["k2","k2"]].forEach(([k,qk])=>{ const v=num(qk); if(v!==undefined) state[k]=v; });
+    if (["h","g","f","e"].includes(q.get("c"))) state.cls = q.get("c");
+    if (/^(p[0-3]|u-max|u-mid)$/.test(q.get("v")||"")) state.view = q.get("v");
+    if (["metrica","m3d","f3d","mus","fus","iso"].includes(q.get("tab"))) state.tab = q.get("tab");
+  }catch(e){}
+  if (!["h","g","f","e"].includes(state.cls)) state.cls = "g";
+  if (![2,3,4].includes(+state.dec)) state.dec = 3;
+  if (![",","."].includes(state.sep)) state.sep = ",";
+})();
+function persist(){
+  try{ localStorage.setItem("rosca-state", JSON.stringify(state)); }catch(e){}
+  try{
+    const q = new URLSearchParams({p:state.P,d:state.d,e1:state.e1,e2:state.e2,k1:state.k1,k2:state.k2,c:state.cls});
+    history.replaceState(null,"","?"+q.toString()+location.hash);
+  }catch(e){}
+}
+
+/* =====================================================================
+   CÁLCULOS (espelho das fórmulas da planilha v17)
+   ===================================================================== */
+const eq = (a,b) => Math.abs(a-b) < 1e-9;
+function r40Round(x){
+  if (!isFinite(x)) return null;
+  let i = -1;
+  for (let j=0;j<R40.length;j++) if (R40[j] <= x) i = j;
+  if (i < 0 || i >= R40.length-1) return null;           // Excel: #N/D / #REF!
+  return (x - R40[i] < R40[i+1] - x) ? R40[i] : R40[i+1];
+}
+function calc(s){
+  const P = s.P, d = s.d;
+  // ---- aba Métrica
+  const m = {P, d};
+  m.d1 = d - 1.2268*P;  m.he = 0.61343*P;  m.Rre = 0.14434*P;  m.S = m.d1*m.d1*0.7854;
+  m.a = 0.036*P;  m.D = d + 2*m.a;  m.D1 = d - 1.0825*P;  m.hi = 0.5413*P + m.a;
+  m.Rri = 0.073*P;  m.d2 = d - 0.64953*P;  m.H = 0.86603*P;  m.H8 = m.H/8; m.H4 = m.H/4; m.H6 = m.H/6;
+
+  // ---- impressão 3D: 4 cenários (erro 1/2 × k mín/máx)
+  const sc = [[s.e1,s.k1,"mín."],[s.e1,s.k2,"máx."],[s.e2,s.k1,"mín."],[s.e2,s.k2,"máx."]].map(([err,k,kl],i)=>{
+    const g = k*err, delta = 2*g, eng = 0.5413*P - delta;
+    const status = eng <= 0 ? "bad" : (eng < 0.2 ? "warn" : "ok");
+    const statusTxt = eng <= 0 ? "INVIÁVEL: passo fino" : (eng < 0.2 ? "ATENÇÃO: pouco engajamento" : "OK");
+    return {i, err, k, kl, g, delta, axial: 2*delta*TAN30, holeInc: 2*delta, eng, status, statusTxt};
+  });
+
+  // ---- usinagem ISO 965-1
+  const row = ISO_P.find(r => eq(r[0],P));
+  const u = {row};
+  if (s.cls === "h") u.esUm = 0;
+  else if (!row) u.esUm = "P fora da tabela";
+  else { const v = row[CLS_COL[s.cls]]; u.esUm = (v==null) ? "n/d" : -v; }
+  u.es = typeof u.esUm === "number" ? u.esUm/1000 : 0;
+  u.TdUm = row ? row[4] : "P fora da tabela";
+  u.Td = typeof u.TdUm === "number" ? u.TdUm/1000 : 0;
+  // faixa de diâmetro: MATCH(d-1e-9, K3:K10, 1)
+  let fx = null; FAIXAS.forEach((f,i)=>{ if (f[0] <= d - 1e-9) fx = i+1; });
+  u.faixa = fx;
+  u.dg = fx ? Math.sqrt(FAIXAS[fx-1][0]*FAIXAS[fx-1][1]) : NaN;
+  const key = TD2_TAB.find(r => fx && r[0]===fx && Math.round(r[1]*100)===Math.round(P*100));
+  u.keyRow = key || null;
+  u.Td2Tab = key ? key[2] : "não tabelado";
+  u.Td2F = 90*Math.pow(P,0.4)*Math.pow(u.dg,0.1);
+  u.Td2R = r40Round(u.Td2F);
+  u.Td2Used = typeof u.Td2Tab === "number" ? u.Td2Tab : u.Td2R;
+  u.Td2Orig = typeof u.Td2Tab === "number" ? "tabela ISO 965-1" : "fórmula aproximada (pode errar 1 passo R40)";
+  u.Td2 = (u.Td2Used==null) ? NaN : u.Td2Used/1000;
+  // macho usinagem
+  u.mE4 = d + u.es; u.mF4 = u.Td; u.mH4 = u.mE4; u.mG4 = u.mH4 - u.mF4; u.mI4 = u.mE4 - u.mF4/2;
+  u.mE5 = d/2 + u.es/2; u.mI5 = u.mI4/2;
+  u.mE6 = m.d2 + u.es; u.mF6 = u.Td2; u.mH6 = u.mE6; u.mG6 = u.mH6 - u.mF6; u.mI6 = u.mE6 - u.mF6/2;
+  u.mE7 = m.d2/2 + u.es/2; u.mI7 = u.mI6/2;
+  u.folgaMin = -u.es; u.folgaFlanco = u.folgaMin/4; u.jogoAxial = u.folgaMin*TAN30;
+  // fêmea usinagem
+  u.TD1Um = row ? (row[5]==null ? "n/d" : row[5]) : "P fora da tabela";
+  u.TD1 = typeof u.TD1Um === "number" ? u.TD1Um/1000 : 0;
+  u.TD2Tab = (key && key[3]!=null) ? key[3] : "não tabelado";
+  u.TD2F = 1.32*u.Td2F;
+  u.TD2R = r40Round(u.TD2F);
+  u.TD2Used = typeof u.TD2Tab === "number" ? u.TD2Tab : u.TD2R;
+  u.TD2Orig = typeof u.TD2Tab === "number" ? "tabela ISO 965-1" : "fórmula aproximada (pode errar 1 passo R40)";
+  u.TD2 = (u.TD2Used==null) ? NaN : u.TD2Used/1000;
+  u.fE4 = m.D1; u.fF4 = u.TD1; u.fG4 = u.fE4; u.fH4 = u.fG4 + u.fF4; u.fI4 = u.fE4 + u.fF4/2;
+  u.fE6 = m.D1/2; u.fI6 = u.fI4/2;
+  u.D1min = m.D1; u.D1max = m.D1 + u.TD1; u.D2min = m.d2; u.D2max = m.d2 + u.TD2; u.Dmin = d;
+  return {m, sc, u};
+}
+
+/* =====================================================================
+   FORMATAÇÃO
+   ===================================================================== */
+function fmt(v, dec){
+  if (typeof v === "string") return v;
+  if (v==null || !isFinite(v)) return "—";
+  if (dec==null) dec = state.dec;
+  let s = v.toFixed(dec);
+  if (s === "-0" || /^-0[.,]0+$/.test(s)) s = s.slice(1);
+  return state.sep === "," ? s.replace(".", ",") : s;
+}
+function fmtUm(v){ // µm: inteiro quando inteiro
+  if (typeof v === "string") return v;
+  if (v==null || !isFinite(v)) return "—";
+  return Number.isInteger(v) ? String(v) : fmt(v,1);
+}
+const fmtIn = v => String(+v).replace(".", state.sep);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const numTd = (v, cls="") => `<td class="num ${cls}" data-copy="${esc(fmt(v))}">${fmt(v)}</td>`;
+
+/* =====================================================================
+   DESENHO — perfil em corte axial
+   ===================================================================== */
+const S3 = Math.sqrt(3);
+/* Gera os pontos do contorno de uma rosca.
+   rp = raio onde a largura do filete = P/2 (linha de flanco), rc = raio da crista (truncamento),
+   R = raio do arredondamento do fundo, dir = +1 macho (dente para fora) / -1 fêmea (dente para dentro),
+   phase = posição axial do centro de um dente. */
+function threadPoints(g, P, xA, xB, dir, phase){
+  const pts = [];
+  let w = P/4 - dir*(g.rc - g.rp)/S3, rcE = g.rc;
+  if (w < 0){ w = 0; rcE = g.rp + dir*S3*P/4; }
+  const rApex = g.rp - dir*S3*P/4;
+  const R = Math.max(0, g.R);
+  const rC = rApex + dir*2*R;
+  const k0 = Math.floor((xA-phase)/P) - 1, k1 = Math.ceil((xB-phase)/P) + 1;
+  for (let k=k0;k<=k1;k++){
+    const xc = phase + k*P;
+    pts.push([xc-w, rcE], [xc+w, rcE]);
+    const xr = xc + P/2;
+    for (let t=-60;t<=60;t+=10){
+      const a = t*Math.PI/180;
+      pts.push([xr + R*Math.sin(a), rC - dir*R*Math.cos(a)]);
+    }
+  }
+  return {pts, crest:rcE, root:rC - dir*R};
+}
+
+function viewGeom(r, view){
+  const {m,u,sc} = r, P = m.P;
+  const machoNom = {rp:m.d2/2, rc:m.d/2,  R:m.Rre};
+  const femeaNom = {rp:m.d2/2, rc:m.D1/2, R:P/16};
+  if (view.startsWith("p")){
+    const s = sc[+view.slice(1)] || sc[0], dl = s.delta;
+    return {kind:"3d", s,
+      macho:machoNom, femea:{rp:m.d2/2+dl, rc:m.D1/2+dl, R:P/16},
+      ghost:{which:"femea", g:femeaNom}, shift:dl};
+  }
+  if (view === "u-mid"){
+    return {kind:"us", mid:true,
+      macho:{rp:u.mI7, rc:u.mI5, R:m.Rre}, femea:{rp:m.d2/2, rc:u.fI6, R:P/16},
+      ghost:{which:"macho", g:machoNom}, shift:u.mI7 - m.d2/2};
+  }
+  return {kind:"us", mid:false,
+    macho:{rp:u.mE7, rc:u.mE5, R:m.Rre}, femea:femeaNom,
+    ghost:{which:"macho", g:machoNom}, shift:u.es/2};
+}
+
+function polyPath(pts, sx, sy){
+  return pts.map((p,i)=>(i?"L":"M")+sx(p[0]).toFixed(2)+" "+sy(p[1]).toFixed(2)).join("");
+}
+
+function drawProfile(r){
+  const {m} = r, P = m.P;
+  const G = viewGeom(r, state.view);
+  const W = 1000, padL = 16, gut = 196, plotW = W - padL - gut;
+  const xA = -0.5*P, xB = 2.5*P;            // 3 passos visíveis
+  const s = plotW/(xB-xA);
+  const mT = threadPoints(G.macho, P, xA, xB, +1, 0);
+  const fT = threadPoints(G.femea, P, xA, xB, -1, P/2);
+  const gT = threadPoints(G.ghost.g, P, xA, xB, G.ghost.which==="macho"?+1:-1, G.ghost.which==="macho"?0:P/2);
+  const lo = Math.min(mT.root, fT.crest, gT.root, gT.crest);
+  const hi = Math.max(fT.root, mT.crest, gT.root, gT.crest);
+  const rMin = lo - 0.14*P, rMax = hi + 0.14*P;
+  const top = 58, bot = 30;
+  const H = Math.round((rMax-rMin)*s + top + bot);
+  const sx = x => padL + (x-xA)*s;
+  const sy = rr => top + (rMax-rr)*s;
+  const yTop = 0, yBot = H;
+
+  const mPath = polyPath(mT.pts, sx, sy) + `L${sx(xB+2*P)} ${yBot+10}L${sx(xA-2*P)} ${yBot+10}Z`;
+  const fPath = polyPath(fT.pts, sx, sy) + `L${sx(xB+2*P)} ${yTop-10}L${sx(xA-2*P)} ${yTop-10}Z`;
+  const gPath = polyPath(gT.pts, sx, sy);
+
+  // linhas de referência (diâmetros)
+  const isM3d = G.kind==="3d";
+  const refs = [
+    {r:mT.crest, lab:"Ø ext. macho", c:"m"},
+    {r:G.macho.rp, lab:isM3d?"d2 (Ø médio)":"d2 macho", c:"p"},
+    {r:mT.root,  lab:"Ø fundo macho", c:"m"},
+    {r:fT.crest, lab:isM3d && G.shift>0 ? "D1 + 2δ (furo)" : "D1 fêmea (furo)", c:"f"},
+    {r:fT.root,  lab:"Ø fundo fêmea", c:"f"},
+  ];
+  if (!eq(G.femea.rp, G.macho.rp)) refs.push({r:G.femea.rp, lab:"D2 fêmea", c:"p"});
+  // anti-colisão dos rótulos
+  const L = refs.map(o=>({...o, y:sy(o.r)})).sort((a,b)=>a.y-b.y);
+  const minGap = 34;
+  for (let i=1;i<L.length;i++) if (L[i].y - L[i-1].y < minGap) L[i].ly = (L[i-1].ly ?? L[i-1].y) + minGap;
+  L.forEach(o=>{ if (o.ly==null) o.ly = o.y; });
+  for (let i=1;i<L.length;i++) if (L[i].ly < L[i-1].ly + minGap) L[i].ly = L[i-1].ly + minGap;
+  const over = L.length ? L[L.length-1].ly - (H-12) : 0;
+  if (over > 0) L.forEach(o=> o.ly -= over);
+  const xLine0 = padL, xLine1 = padL + plotW, xLab = W - gut + 22;
+  const colorOf = c => c==="m" ? "var(--macho-stroke)" : c==="f" ? "var(--femea-stroke)" : "var(--muted)";
+  const refSvg = L.map(o=>`
+    <line x1="${xLine0}" x2="${xLine1}" y1="${o.y}" y2="${o.y}" stroke="${colorOf(o.c)}" stroke-opacity=".35" stroke-width="1" stroke-dasharray="${o.c==='p'?'10 4 2 4':'3 4'}"/>
+    <path d="M${xLine1} ${o.y} L${xLab-8} ${o.ly}" stroke="${colorOf(o.c)}" stroke-opacity=".5" fill="none"/>
+    <text class="svg-t" x="${xLab}" y="${o.ly-2}">${fmt(2*o.r)}</text>
+    <text class="svg-t s" x="${xLab}" y="${o.ly+12}">${o.lab}</text>`).join("");
+
+  // cota do passo P (no topo, entre centros de dois dentes do macho)
+  const yP = 22, xp0 = sx(0), xp1 = sx(P);
+  const pDim = `
+    <line x1="${xp0}" x2="${xp0}" y1="${yP-8}" y2="${sy(mT.crest)}" stroke="var(--dim)" stroke-opacity=".35" stroke-dasharray="2 3"/>
+    <line x1="${xp1}" x2="${xp1}" y1="${yP-8}" y2="${sy(mT.crest)}" stroke="var(--dim)" stroke-opacity=".35" stroke-dasharray="2 3"/>
+    <line x1="${xp0}" x2="${xp1}" y1="${yP}" y2="${yP}" stroke="var(--dim)" marker-start="url(#ar)" marker-end="url(#ar)"/>
+    <rect x="${(xp0+xp1)/2-52}" y="${yP-11}" width="104" height="20" rx="5" fill="var(--plot-bg)"/>
+    <text class="svg-t" text-anchor="middle" x="${(xp0+xp1)/2}" y="${yP+4}">P = ${fmt(P)}</text>`;
+
+  // cota do deslocamento (δ ou es/2)
+  let shiftSvg = "";
+  const sh = Math.abs(G.shift);
+  const isF = G.ghost.which === "femea";
+  const xs = isF ? sx(1.5*P) : sx(P);
+  const yA = sy(isF ? gT.crest : gT.crest), yB = sy(isF ? fT.crest : mT.crest);
+  const shLab = G.kind==="3d" ? `δ = ${fmt(G.shift)}` : (G.mid ? `Δr = ${fmt(G.shift)}` : `es/2 = ${fmt(G.shift)}`);
+  if (sh > 1e-9){
+    const big = Math.abs(yB-yA) > 14;
+    shiftSvg = `
+      <line x1="${xs}" x2="${xs}" y1="${yA}" y2="${yB}" stroke="var(--accent)" stroke-width="1.6" ${big?'marker-start="url(#arA)" marker-end="url(#arA)"':''}/>
+      <rect x="${xs+8}" y="${(yA+yB)/2-11}" width="${shLab.length*8+14}" height="22" rx="6" fill="var(--accent)"/>
+      <text class="svg-t" style="fill:#fff" x="${xs+15}" y="${(yA+yB)/2+4}">${shLab}</text>`;
+  }
+
+  const html = `
+  <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Perfil da rosca macho e fêmea em corte">
+    <defs>
+      <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1L10 5L0 9z" fill="var(--dim)"/></marker>
+      <marker id="arA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1L10 5L0 9z" fill="var(--accent)"/></marker>
+      <clipPath id="clipP"><rect x="${padL}" y="0" width="${plotW}" height="${H}"/></clipPath>
+      <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="var(--femea-stroke)" stroke-opacity=".28" stroke-width="2"/></pattern>
+      <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--macho-fill)" stop-opacity="1"/><stop offset="1" stop-color="var(--macho-fill)" stop-opacity=".55"/></linearGradient>
+    </defs>
+    ${refSvg}
+    <g clip-path="url(#clipP)">
+      <path d="${fPath}" fill="var(--femea-fill)" stroke="none"/>
+      <path d="${fPath}" fill="url(#hatch)" stroke="var(--femea-stroke)" stroke-width="2" stroke-linejoin="round"/>
+      <path d="${mPath}" fill="url(#metal)" stroke="var(--macho-stroke)" stroke-width="2" stroke-linejoin="round"/>
+      <path d="${gPath}" fill="none" stroke="var(--ghost)" stroke-width="1.4" stroke-dasharray="5 4"/>
+      <line x1="${padL}" x2="${padL+plotW}" y1="${sy(m.d2/2)}" y2="${sy(m.d2/2)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="14 4 2 4"/>
+    </g>
+    ${pDim}
+    ${shiftSvg}
+    <text class="svg-t s" x="${padL+8}" y="${H-10}">↓ eixo da rosca</text>
+  </svg>`;
+  document.getElementById("plotProfile").innerHTML = html;
+
+  // legenda + subtítulo
+  const ghostTxt = isF ? "Fêmea nominal (sem folga)" : "Macho nominal";
+  document.getElementById("legend").innerHTML = `
+    <span><i class="sw m"></i>Macho ${G.kind==="3d"?"(nominal)":G.mid?"(meio da tolerância)":"(matéria máxima)"}</span>
+    <span><i class="sw f"></i>Fêmea ${G.kind==="3d"?"(com folga δ)":G.mid?"(meio da tolerância)":"(nominal, EI = 0)"}</span>
+    <span><i class="sw g"></i>${ghostTxt}</span>
+    <span><i class="sw p"></i>Ø médio nominal d2</span>`;
+  document.getElementById("visSub").textContent =
+    G.kind==="3d" ? `Impressão 3D · erro ${fmtIn(G.s.err)} mm · k ${fmtIn(G.s.k)} · corte axial em escala real`
+                  : `Usinagem 6H/6${state.cls} · ${G.mid?"CAD no meio da tolerância":"CAD em matéria máxima"} · corte axial em escala real`;
+}
+
+/* ---------- Vista geral: macho + fêmea em meio-corte ---------- */
+function drawOverview(r){
+  const {m} = r, P = m.P, d = m.d;
+  const G = viewGeom(r, state.view);
+  const W = 1000, Hmax = 260;
+  const nutOut = Math.max(G.femea.rp, m.D/2) + Math.max(0.35*d, 2*P);
+  const s = (Hmax-56)/(2*nutOut);
+  let L = 760/(1.25*s);
+  L = Math.max(8*P, Math.min(L, Math.max(2.5*d, 8*P)));
+  const cy = Hmax/2 + 6;
+  const x0 = Math.max(90, (W - L*1.25*s)/2);
+  const sx = x => x0 + x*s;
+  const yT = rr => cy - rr*s, yB = rr => cy + rr*s;
+  // macho (parafuso): silhueta superior e inferior (inferior defasada de P/2 pela hélice)
+  const top = threadPoints(G.macho, P, 0, L, +1, 0).pts.filter(p=>p[0]>=0 && p[0]<=L);
+  const botRaw = threadPoints(G.macho, P, 0, L, +1, P/2).pts.filter(p=>p[0]>=0 && p[0]<=L);
+  const Lb = L*1.25;
+  const tPath = top.map((p,i)=>(i?"L":"M")+sx(p[0]).toFixed(1)+" "+yT(p[1]).toFixed(1)).join("");
+  const bPath = botRaw.slice().reverse().map(p=>"L"+sx(p[0]).toFixed(1)+" "+yB(p[1]).toFixed(1)).join("");
+  // corpo liso à direita (haste) com raio d/2
+  const shank = `L${sx(L)} ${yT(d/2)}L${sx(Lb)} ${yT(d/2)}L${sx(Lb)} ${yB(d/2)}L${sx(L)} ${yB(d/2)}`;
+  const bolt = `M${sx(0)} ${yT(m.d1/2)}` + tPath.replace(/^M/,"L") + shank + bPath + `L${sx(0)} ${yB(m.d1/2)}Z`;
+  // linhas da hélice (cristas)
+  let helix = "";
+  const step = Math.max(1, Math.ceil((P*s) < 3 ? 3/(P*s) : 1));
+  for (let k=0; k*P + P/2 <= L; k+=step){
+    const xa = k*P, xb = k*P + P/2;
+    helix += `<line x1="${sx(xa)}" y1="${yT(G.macho.rc)}" x2="${sx(xb)}" y2="${yB(G.macho.rc)}"/>`;
+  }
+  // fêmea (porca) em corte: só a metade superior, sobre o trecho rosqueado
+  const nx0 = 0.15*L, nx1 = 0.85*L;
+  const fpts = threadPoints(G.femea, P, nx0, nx1, -1, P/2).pts.filter(p=>p[0]>=nx0 && p[0]<=nx1);
+  const nut = `M${sx(nx0)} ${yT(nutOut)}` + fpts.map(p=>"L"+sx(p[0]).toFixed(1)+" "+yT(p[1]).toFixed(1)).join("") + `L${sx(nx1)} ${yT(nutOut)}Z`;
+  // cotas
+  const dimX = x0 - 26;
+  const html = `
+  <svg viewBox="0 0 ${W} ${Hmax}" role="img" aria-label="Vista geral do parafuso e da porca">
+    <defs>
+      <linearGradient id="boltG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="var(--macho-fill)" stop-opacity=".55"/><stop offset=".35" stop-color="var(--macho-fill)"/><stop offset="1" stop-color="var(--macho-fill)" stop-opacity=".45"/>
+      </linearGradient>
+      <pattern id="hatch2" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="var(--femea-stroke)" stroke-opacity=".3" stroke-width="2"/></pattern>
+      <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 1L10 5L0 9z" fill="var(--dim)"/></marker>
+    </defs>
+    <line x1="${sx(-0.05*L)}" x2="${sx(Lb*1.02)}" y1="${cy}" y2="${cy}" stroke="var(--muted)" stroke-dasharray="14 4 2 4" stroke-width="1"/>
+    <path d="${bolt}" fill="url(#boltG)" stroke="var(--macho-stroke)" stroke-width="1.4" stroke-linejoin="round"/>
+    <g stroke="var(--macho-stroke)" stroke-opacity=".35" stroke-width="1">${helix}</g>
+    <path d="${nut}" fill="var(--femea-fill)" stroke="none"/>
+    <path d="${nut}" fill="url(#hatch2)" stroke="var(--femea-stroke)" stroke-width="1.4" stroke-linejoin="round"/>
+    <line x1="${dimX}" x2="${dimX}" y1="${yT(d/2)}" y2="${yB(d/2)}" stroke="var(--dim)" marker-start="url(#ar2)" marker-end="url(#ar2)"/>
+    <text class="svg-t" x="${dimX-8}" y="${cy+4}" text-anchor="end">Ø${fmtIn(d)}</text>
+    <text class="svg-t s" x="${sx(Lb)}" y="${Hmax-8}" text-anchor="end">${fmtIn(Math.round(L/P))} filetes · escala ${s>=1?fmt(s,1)+"×":"1:"+fmt(1/s,1)}</text>
+    <text class="svg-t s" x="${sx((nx0+nx1)/2)}" y="${yT(nutOut)-8}" text-anchor="middle">fêmea em corte</text>
+  </svg>`;
+  document.getElementById("plotOver").innerHTML = html;
+  document.getElementById("overSub").textContent = `M${fmtIn(d)} × ${fmtIn(P)} — proporção real entre diâmetro e passo`;
+}
+
+/* =====================================================================
+   RESUMO / CENÁRIOS
+   ===================================================================== */
+function statusChip(s){ const ic = s.status==="ok"?"✓":s.status==="warn"?"!":"✕"; return `<span class="st ${s.status}">${ic} ${esc(s.statusTxt)}</span>`; }
+function renderScenarios(r){
+  const dotC = s => s.status==="ok" ? "var(--rzk-niquel)" : s.status==="warn" ? "var(--rzk-escarlate)" : "var(--rzk-bordo)";
+  document.getElementById("scen3d").innerHTML = r.sc.map(s=>`
+    <button data-v="p${s.i}" class="${state.view==="p"+s.i?"on":""}" title="${esc(s.statusTxt)}">
+      <span class="dot" style="background:${dotC(s)}"></span>
+      <span>Erro <b>${fmtIn(s.err)}</b> · k ${s.kl}</span></button>`).join("");
+  document.getElementById("scenUs").innerHTML = `
+    <button data-v="u-max" class="${state.view==="u-max"?"on":""}"><span class="dot" style="background:var(--rzk-titanio)"></span><span>Matéria máx.</span></button>
+    <button data-v="u-mid" class="${state.view==="u-mid"?"on":""}"><span class="dot" style="background:var(--rzk-niquel)"></span><span>Meio da tol.</span></button>`;
+}
+function stat(k, v, unit, sub){ return `<div class="stat"><div class="k">${k}</div><div class="v">${v}${unit?`<small>${unit}</small>`:""}</div>${sub?`<div class="s">${sub}</div>`:""}</div>`; }
+function renderStats(r){
+  const {m,u,sc} = r;
+  let h = "";
+  if (state.view.startsWith("p")){
+    const s = sc[+state.view.slice(1)] || sc[0];
+    h = stat("δ radial na fêmea", fmt(s.delta), "mm", `g = ${fmt(s.g)} mm no flanco`)
+      + stat("Ø do furo (D1 + 2δ)", fmt(m.D1 + 2*s.delta), "mm", `nominal ${fmt(m.D1)} mm`)
+      + stat("Jogo axial total", fmt(s.axial), "mm", "2·δ·tan30°")
+      + `<div class="stat"><div class="k">Engajamento radial</div><div class="v">${fmt(s.eng)}<small>mm</small></div><div class="s" style="margin-top:4px">${statusChip(s)}</div></div>`;
+  } else {
+    const mid = state.view === "u-mid";
+    h = stat("Desvio es do macho", typeof u.esUm==="number" ? fmtUm(u.esUm) : esc(u.esUm), typeof u.esUm==="number"?"µm":"", `classe 6${state.cls}`)
+      + stat(mid?"d2 macho (meio)":"d2 macho (máx.)", fmt(mid?u.mI6:u.mE6), "mm", `Td2 = ${fmtUm(u.Td2Used)} µm`)
+      + stat("Folga mín. no Ø médio", fmt(u.folgaMin), "mm", `jogo axial ${fmt(u.jogoAxial)} mm`)
+      + stat("Ø furo D1 fêmea", fmt(mid?u.fI4:m.D1), "mm", `TD1 = ${fmtUm(u.TD1Um)}${typeof u.TD1Um==="number"?" µm":""}`);
+  }
+  document.getElementById("stats").innerHTML = h;
+}
+
+/* =====================================================================
+   ABAS
+   ===================================================================== */
+const ROW_DESC_M = ["Passo P","Diâmetro da extrusão = d","Raio do cilindro = d/2","Diâmetro da hélice = d2","Raio da hélice = d2/2","Altura da linha da hélice ao topo = H/2","Diâmetro do círculo = 2 × Rre","Ângulo do perfil (constante)","Recuo da hélice a partir da face = P"];
+const ROW_DESC_F = ["Passo P","Diâmetro da hélice = D1","Diâmetro do furo = D1","Raio do furo/hélice = D1/2","Raio do diâmetro médio = d2/2","Altura = H/2","Diâmetro pequeno = P/8","Ângulo do perfil (constante)","Recuo da hélice a partir da face = P"];
+const angleFmt = v => typeof v === "number" && v===60 ? "60°" : fmt(v);
+function scenHeaders(r){
+  return r.sc.map(s=>`<th class="r clickable ${state.view==="p"+s.i?"sel":""}" data-view="p${s.i}" title="Visualizar este cenário">Erro ${fmtIn(s.err)} mm · k ${s.kl}</th>`).join("");
+}
+function refImgs(a,b,title){
+  return `<details class="ref"><summary>Referência CAD <span>— ${title} (exemplo M15 × 0,75 da planilha; cotas numeradas = coluna Nº)</span></summary>
+    <div class="ref-imgs"><img loading="lazy" src="assets/${a}" alt="Esboço com cotas numeradas"><img loading="lazy" src="assets/${b}" alt="Esquema 2D"></div></details>`;
+}
+function notes(list){ return `<ul class="notes">${list.map(n=>`<li>${n}</li>`).join("")}</ul>`; }
+
+function tabMetrica(r){
+  const m = r.m;
+  const items = [
+    ["P","Passo","entrada",m.P,"mm",true],
+    ["d","Ø nominal","entrada",m.d,"mm",true],
+    ["d1","Ø menor do macho","d − 1,2268·P",m.d1,"mm"],
+    ["he","Altura do filete externo","0,61343·P",m.he,"mm"],
+    ["Rre","Raio do fundo externo","0,14434·P",m.Rre,"mm"],
+    ["S","Seção resistente","d1² · 0,7854",m.S,"mm²"],
+    ["D","Ø maior da fêmea","d + 2a",m.D,"mm"],
+    ["D1","Ø menor da fêmea","d − 1,0825·P",m.D1,"mm"],
+    ["hi","Altura do filete interno","0,5413·P + a",m.hi,"mm"],
+    ["Rri","Raio do fundo interno","0,073·P",m.Rri,"mm"],
+    ["d2 = D2","Ø médio (flancos)","d − 0,64953·P",m.d2,"mm"],
+    ["a","Folga de fundo","0,036·P",m.a,"mm"],
+    ["H","Triângulo fundamental","0,86603·P",m.H,"mm"],
+    ["H/8","","H / 8",m.H8,"mm"],
+    ["H/4","","H / 4",m.H4,"mm"],
+    ["H/6","","H / 6",m.H6,"mm"],
+  ];
+  return `<div class="sec-title"><h3>Rosca métrica ISO</h3><span>dimensões básicas do perfil · clique para copiar</span></div>
+  <div class="fgrid">${items.map(([sym,nm,fx,v,u,inp])=>`
+    <div class="fc ${inp?"input":""}" data-copy="${esc(fmt(v))}">
+      <div class="sym"><b>${sym}</b><span>${u}</span></div>
+      <div class="nm">${nm||"&nbsp;"}</div>
+      <div class="val">${fmt(v)}</div>
+      <div class="fx">${fx}</div>
+    </div>`).join("")}</div>`;
+}
+
+function tabM3d(r){
+  const m = r.m;
+  const vals = [m.P, m.d, m.d/2, m.d2, m.d2/2, m.H/2, 2*m.Rre, 60, m.P];
+  const rows = vals.map((v,i)=>`<tr><td class="idx">${i+1}</td><td class="desc">${ROW_DESC_M[i]}</td>${i===7?`<td class="num">60°</td>`:numTd(v)}<td><span class="tag">NÃO (nominal)</span></td>${r.sc.map(s=> i===7?`<td class="num ${state.view==="p"+s.i?"sel":""}">60°</td>`:numTd(v, state.view==="p"+s.i?"sel":"")).join("")}</tr>`).join("");
+  return `<div class="callout"><b>Macho = nominal.</b> Nenhuma cota do macho recebe folga: toda a folga vai na <b>fêmea</b> (aba “Fêmea 3D”).</div>
+  <div class="sec-title"><h3>Valores para o desenho 3D — rosca externa</h3><span>impressão 3D</span></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Nº</th><th>Descrição</th><th class="r">Nominal (folga 0,0)</th><th>Aplicar folga?</th>${scenHeaders(r)}</tr></thead>
+    <tbody>${rows}</tbody></table></div>
+  <div class="sec-title"><h3>Erro da impressora</h3><span>definido no painel lateral (valores vêm da aba Fêmea 3D)</span></div>
+  <div class="kv">
+    <div class="it"><span class="l">Erro da impressora 1</span><span class="v" data-copy="${fmt(state.e1)}">${fmt(state.e1)} mm</span></div>
+    <div class="it"><span class="l">Erro da impressora 2</span><span class="v" data-copy="${fmt(state.e2)}">${fmt(state.e2)} mm</span></div>
+    <div class="it"><span class="l">Fator k mínimo (g = k × erro)</span><span class="v">${fmtIn(state.k1)}</span></div>
+    <div class="it"><span class="l">Fator k máximo</span><span class="v">${fmtIn(state.k2)}</span></div>
+  </div>
+  <div class="sec-title"><h3>Notas</h3></div>
+  ${notes([
+    "O macho é o gabarito: mantém d, d2, Rre e o perfil nominais, e pode ser conferido com paquímetro.",
+    "Se preferir dividir a folga: subtraia δ/2 das cotas 2 e 3 (Ø e raio do cilindro) e 4 e 5 (Ø e raio da hélice) do macho, e use δ/2 na fêmea. Para o valor de δ, veja a aba “Fêmea 3D”.",
+    "A hélice começa P fora da face (cota 9) para o corte sair limpo na entrada da rosca."
+  ])}
+  ${refImgs("macho-cotas.png","macho-3d-esquema.png","rosca externa")}`;
+}
+
+function tabF3d(r){
+  const m = r.m;
+  const def = [ // [nominal, fn(delta), aplica, tag]
+    [m.P, d=>m.P, false, "NÃO (nominal)"],
+    [m.D1, d=>m.D1+2*d, true, "SIM: + 2δ (diâmetro)"],
+    [m.D1, d=>m.D1+2*d, true, "SIM: + 2δ (diâmetro)"],
+    [m.D1/2, d=>m.D1/2+d, true, "SIM: + δ (raio)"],
+    [m.d2/2, d=>m.d2/2+d, true, "SIM: + δ (raio)"],
+    [m.H/2, d=>m.H/2, false, "NÃO (nominal)"],
+    [m.P/8, d=>m.P/8, false, "NÃO (nominal)"],
+    [60, d=>60, false, "NÃO (nominal)"],
+    [m.P, d=>m.P, false, "NÃO (nominal)"],
+  ];
+  const rows = def.map(([nom,fn,yes,tag],i)=>`<tr class="${yes?"yes":""}"><td class="idx">${i+1}</td><td class="desc">${ROW_DESC_F[i]}</td>${i===7?`<td class="num">60°</td>`:numTd(nom)}<td><span class="tag ${yes?"yes":""}">${tag}</span></td>${r.sc.map(s=> i===7?`<td class="num ${state.view==="p"+s.i?"sel":""}">60°</td>`:numTd(fn(s.delta), state.view==="p"+s.i?"sel":"")).join("")}</tr>`).join("");
+  const sel = s => state.view==="p"+s.i?"sel":"";
+  const calcRows = [
+    ["Folga real no flanco g = k × erro", s=>s.g],
+    ["δ radial a aplicar = 2 × g", s=>s.delta],
+    ["Jogo axial total = 2·δ·tan30°", s=>s.axial],
+    ["Aumento do Ø do furo = 2δ", s=>s.holeInc],
+    ["Engajamento radial restante = 0,5413·P − δ", s=>s.eng],
+  ].map(([l,fn])=>`<tr><td class="desc">${l} <span class="muted">(mm)</span></td>${r.sc.map(s=>numTd(fn(s), sel(s))).join("")}</tr>`).join("")
+   + `<tr><td class="desc">Avaliação <span class="muted">(indicativa, limite 0,2 mm)</span></td>${r.sc.map(s=>`<td class="r ${sel(s)}">${statusChip(s)}</td>`).join("")}</tr>`;
+  return `<div class="sec-title"><h3>Valores para o desenho 3D — rosca interna</h3><span>folga pelo erro da impressora · linhas em destaque recebem δ</span></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Nº</th><th>Descrição</th><th class="r">Nominal (folga 0,0)</th><th>Aplicar folga?</th>${scenHeaders(r)}</tr></thead>
+    <tbody>${rows}</tbody></table></div>
+  <div class="sec-title"><h3>Cálculo da folga</h3><span>δ = deslocamento radial do perfil da fêmea para fora</span></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Grandeza</th>${scenHeaders(r)}</tr></thead>
+    <tbody>${calcRows}</tbody></table></div>
+  <div class="sec-title"><h3>Notas</h3></div>
+  ${notes([
+    "Erro da impressora = desvio típico (±) das peças impressas. A folga real no flanco é g = k × erro (k de 1,0 a 1,5). Como os flancos têm 30° da vertical, deslocar o perfil δ na radial dá só δ/2 de folga no flanco; por isso δ = 2g.",
+    "Aplique δ somente nas cotas marcadas “SIM”: Ø hélice (2), Ø furo (3), raio D1/2 (4) e raio d2/2 (5). P, H/2, P/8, 60° e o recuo (9) ficam nominais.",
+    "Veja a linha “Avaliação”: com erro 0,2 mm e P = 0,75 o perfil quase some. Nesse caso aumente o passo (por exemplo P ≥ 1,5 mm) antes de aumentar a folga.",
+    "O macho fica NOMINAL (gabarito). Alternativa: dividir a folga, fêmea + δ/2 e macho − δ/2 nas cotas equivalentes (macho: 2, 3, 4 e 5, subtraindo).",
+    "Valores práticos de projeto, não normativos (a ISO 965 não cobre impressão 3D). Imprima antes um trecho curto (3 a 4 voltas) e ajuste k."
+  ])}
+  ${refImgs("femea-cotas.png","femea-3d-esquema.png","rosca interna")}`;
+}
+
+function kvItem(l, v, em, copy){ const c = copy!==undefined ? copy : v; return `<div class="it ${em?"em":""}"><span class="l">${l}</span><span class="v" data-copy="${esc(c)}">${v}</span></div>`; }
+function umOrTxt(v){ return typeof v === "number" ? fmtUm(v)+" µm" : esc(v); }
+
+function tabMus(r){
+  const {m,u} = r;
+  const selE = state.view==="u-max" ? "sel" : "", selI = state.view==="u-mid" ? "sel" : "";
+  const R = (i, nom, tag, yes, E, F, G, H, I) => `<tr class="${yes?"yes":""}"><td class="idx">${i}</td><td class="desc">${ROW_DESC_M[i-1]}</td>${i===8?`<td class="num">60°</td>`:numTd(nom)}<td><span class="tag ${yes?"yes":""}">${tag}</span></td>${i===8?`<td class="num ${selE}">60°</td>`:numTd(E,selE)}${F==null?"<td></td>":numTd(F)}${G==null?"<td></td>":numTd(G)}${H==null?"<td></td>":numTd(H)}${i===8?`<td class="num ${selI}">60°</td>`:numTd(I,selI)}</tr>`;
+  const rows = [
+    R(1,m.P,"NÃO (nominal)",false,m.P,null,null,null,m.P),
+    R(2,m.d,"SIM: + es (Ø)",true,u.mE4,u.mF4,u.mG4,u.mH4,u.mI4),
+    R(3,m.d/2,"SIM: + es/2 (raio)",true,u.mE5,null,null,null,u.mI5),
+    R(4,m.d2,"SIM: + es (Ø)",true,u.mE6,u.mF6,u.mG6,u.mH6,u.mI6),
+    R(5,m.d2/2,"SIM: + es/2 (raio)",true,u.mE7,null,null,null,u.mI7),
+    R(6,m.H/2,"NÃO (nominal)",false,m.H/2,null,null,null,m.H/2),
+    R(7,2*m.Rre,"NÃO (nominal)",false,2*m.Rre,null,null,null,2*m.Rre),
+    R(8,60,"NÃO (nominal)",false,60,null,null,null,60),
+    R(9,m.P,"NÃO (nominal)",false,m.P,null,null,null,m.P),
+  ].join("");
+  const esTxt = typeof u.esUm==="number" ? fmtUm(u.esUm)+" µm" : esc(u.esUm);
+  return `<div class="callout">Ajuste <b>6H/6${state.cls}</b> (ISO 965-1): fêmea com EI = 0 e macho com desvio <b>es ${typeof u.esUm==="number"?"= "+fmtUm(u.esUm)+" µm":"— "+esc(u.esUm)}</b>. Altere a classe no painel lateral.</div>
+  <div class="sec-title"><h3>Valores para o desenho 3D — rosca externa</h3><span>usinagem · clique nos cabeçalhos CAD para visualizar</span></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Nº</th><th>Descrição</th><th class="r">Nominal</th><th>Aplicar desvio es?</th>
+      <th class="r clickable ${selE}" data-view="u-max">CAD: matéria máx.<br><span class="muted" style="font-weight:400">nominal + es</span></th>
+      <th class="r">Tolerância T</th><th class="r">Mínimo</th><th class="r">Máximo</th>
+      <th class="r clickable ${selI}" data-view="u-mid">CAD: meio da tol.</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>
+  <div class="grid2">
+    <div>
+      <div class="sec-title"><h3>Cálculos</h3></div>
+      <div class="kv" style="grid-template-columns:1fr">
+        ${kvItem("Passo P", fmt(m.P)+" mm", false, fmt(m.P))}
+        ${kvItem("Desvio fundamental es", esTxt, true, typeof u.esUm==="number"?fmtUm(u.esUm):"")}
+        ${kvItem("Desvio es (mm)", fmt(u.es), false)}
+        ${kvItem("Td(6): tolerância do Ø maior", umOrTxt(u.TdUm), false, typeof u.TdUm==="number"?fmtUm(u.TdUm):"")}
+        ${kvItem("Td(6) (mm)", fmt(u.Td), false)}
+        ${kvItem("Faixa de diâmetro ISO 965-1 (nº)", u.faixa ?? "fora da faixa", false)}
+        ${kvItem("Ø médio geométrico da faixa dg", fmt(u.dg)+" mm", false, fmt(u.dg))}
+        ${kvItem("Td2(6) tabelado ISO", umOrTxt(u.Td2Tab), false, typeof u.Td2Tab==="number"?fmtUm(u.Td2Tab):"")}
+        ${kvItem("Td2(6) fórmula = 90·P^0,4·dg^0,1", fmt(u.Td2F,2)+" µm", false, fmt(u.Td2F,2))}
+        ${kvItem("Td2(6) da fórmula arredondado R40", umOrTxt(u.Td2R ?? "—"), false, fmtUm(u.Td2R))}
+        ${kvItem("Td2(6) usado", umOrTxt(u.Td2Used ?? "—"), true, fmtUm(u.Td2Used))}
+        ${kvItem("Origem do Td2", esc(u.Td2Orig), false)}
+        ${kvItem("Td2(6): tolerância do Ø médio", fmt(u.Td2)+" mm", false, fmt(u.Td2))}
+      </div>
+    </div>
+    <div>
+      <div class="sec-title"><h3>Folga mínima do ajuste</h3></div>
+      <div class="kv" style="grid-template-columns:1fr">
+        ${kvItem("Folga mínima no Ø médio = D2 mín − d2 máx = |es|", fmt(u.folgaMin)+" mm", true, fmt(u.folgaMin))}
+        ${kvItem("Folga mínima perpendicular ao flanco ≈ |es|/4", fmt(u.folgaFlanco)+" mm", false, fmt(u.folgaFlanco))}
+        ${kvItem("Jogo axial mínimo total = |es|·tan30°", fmt(u.jogoAxial)+" mm", false, fmt(u.jogoAxial))}
+      </div>
+      <div class="sec-title"><h3>Notas</h3></div>
+      ${notes([
+        "Ajuste padrão 6H/6g (ISO 965-1): fêmea com EI = 0 (cotas nominais) e macho com desvio es negativo. A folga mínima fica só no Ø médio e vale |es|.",
+        "Para modelar no CAD use a coluna “matéria máx.” (nominal + es) ou “meio da tol.”. A peça usinada pode variar entre Mínimo e Máximo.",
+        "Raios não têm tolerância própria: use a do diâmetro (colunas T, Mínimo e Máximo só nas linhas de Ø).",
+        "es, Td e Td2 vêm da tabela ISO 965-1 para o passo e a faixa de diâmetro. Se a combinação não estiver tabelada, o Td2 usa fórmula aproximada e a linha “Origem do Td2” avisa."
+      ])}
+    </div>
+  </div>
+  ${refImgs("macho-cotas.png","macho-usinagem-esquema.png","rosca externa, usinagem")}`;
+}
+
+function tabFus(r){
+  const {m,u} = r;
+  const selE = state.view==="u-max" ? "sel" : "", selI = state.view==="u-mid" ? "sel" : "";
+  const R = (i, nom, E, F, G, H, I) => `<tr><td class="idx">${i}</td><td class="desc">${ROW_DESC_F[i-1]}</td>${i===8?`<td class="num">60°</td>`:numTd(nom)}<td><span class="tag">NÃO (EI = 0)</span></td>${i===8?`<td class="num ${selE}">60°</td>`:numTd(E,selE)}${F==null?"<td></td>":numTd(F)}${G==null?"<td></td>":numTd(G)}${H==null?"<td></td>":numTd(H)}${i===8?`<td class="num ${selI}">60°</td>`:numTd(I,selI)}</tr>`;
+  const rows = [
+    R(1,m.P,m.P,null,null,null,m.P),
+    R(2,m.D1,u.fE4,u.fF4,u.fG4,u.fH4,u.fI4),
+    R(3,m.D1,u.fE4,u.fF4,u.fG4,u.fH4,u.fI4),
+    R(4,m.D1/2,u.fE6,null,null,null,u.fI6),
+    R(5,m.d2/2,m.d2/2,null,null,null,m.d2/2),
+    R(6,m.H/2,m.H/2,null,null,null,m.H/2),
+    R(7,m.P/8,m.P/8,null,null,null,m.P/8),
+    R(8,60,60,null,null,null,60),
+    R(9,m.P,m.P,null,null,null,m.P),
+  ].join("");
+  return `<div class="callout">Fêmea <b>6H</b>: desvio fundamental EI = 0, então nenhuma cota recebe folga. A folga do ajuste vem do macho (classe <b>6${state.cls}</b>).</div>
+  <div class="sec-title"><h3>Valores para o desenho 3D — rosca interna</h3><span>usinagem · ISO 965-1</span></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Nº</th><th>Descrição</th><th class="r">Nominal</th><th>Aplicar desvio EI?</th>
+      <th class="r clickable ${selE}" data-view="u-max">CAD: matéria máx.<br><span class="muted" style="font-weight:400">mínimo = nominal</span></th>
+      <th class="r">Tolerância T</th><th class="r">Mínimo</th><th class="r">Máximo</th>
+      <th class="r clickable ${selI}" data-view="u-mid">CAD: meio da tol.</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>
+  <div class="grid2">
+    <div>
+      <div class="sec-title"><h3>Cálculos</h3></div>
+      <div class="kv" style="grid-template-columns:1fr">
+        ${kvItem("Classe da fêmea", "H (EI = 0)", false)}
+        ${kvItem("Classe do macho", "6"+state.cls, false)}
+        ${kvItem("TD1(6): tolerância do Ø menor", umOrTxt(u.TD1Um), true, typeof u.TD1Um==="number"?fmtUm(u.TD1Um):"")}
+        ${kvItem("TD1(6) (mm)", fmt(u.TD1), false)}
+        ${kvItem("Faixa de diâmetro ISO 965-1 (nº)", u.faixa ?? "fora da faixa", false)}
+        ${kvItem("Ø médio geométrico da faixa dg", fmt(u.dg)+" mm", false, fmt(u.dg))}
+        ${kvItem("TD2(6) tabelado ISO", umOrTxt(u.TD2Tab), false, typeof u.TD2Tab==="number"?fmtUm(u.TD2Tab):"")}
+        ${kvItem("Td2(6) fórmula = 90·P^0,4·dg^0,1", fmt(u.Td2F,2)+" µm", false, fmt(u.Td2F,2))}
+        ${kvItem("TD2(6) fórmula = 1,32 × Td2(6)", fmt(u.TD2F,2)+" µm", false, fmt(u.TD2F,2))}
+        ${kvItem("TD2(6) da fórmula arredondado R40", umOrTxt(u.TD2R ?? "—"), false, fmtUm(u.TD2R))}
+        ${kvItem("TD2(6) usado", umOrTxt(u.TD2Used ?? "—"), true, fmtUm(u.TD2Used))}
+        ${kvItem("Origem do TD2", esc(u.TD2Orig), false)}
+        ${kvItem("TD2(6): tolerância do Ø médio", fmt(u.TD2)+" mm", false, fmt(u.TD2))}
+      </div>
+    </div>
+    <div>
+      <div class="sec-title"><h3>Limites da fêmea 6H</h3><span>mm</span></div>
+      <div class="kv" style="grid-template-columns:1fr">
+        ${kvItem("Ø menor D1: mínimo (nominal)", fmt(u.D1min), false)}
+        ${kvItem("Ø menor D1: máximo", fmt(u.D1max), true)}
+        ${kvItem("Ø médio D2: mínimo (nominal)", fmt(u.D2min), false)}
+        ${kvItem("Ø médio D2: máximo", fmt(u.D2max), true)}
+        ${kvItem("Ø maior D: mínimo (nominal, EI = 0)", fmt(u.Dmin), false)}
+        ${kvItem("Folga mínima do ajuste no Ø médio = |es| do macho", fmt(u.folgaMin), true)}
+      </div>
+      <div class="sec-title"><h3>Notas</h3></div>
+      ${notes([
+        "Fêmea 6H: desvio fundamental EI = 0, então nenhuma cota recebe folga; o modelo CAD usa os valores nominais (mínimo = nominal).",
+        "A tolerância TD1 vale para o Ø menor (furo, cotas 2 e 3) e TD2 para o Ø médio (cota 5 é o raio da hélice, com limites na tabela acima).",
+        "A folga do ajuste vem do macho (es). Mude a classe do macho no painel lateral para ver o efeito aqui.",
+        "TD1 e TD2 vêm da tabela ISO 965-1 para o passo e a faixa de diâmetro. Se a combinação não estiver tabelada, o TD2 usa fórmula aproximada e a linha “Origem do TD2” avisa."
+      ])}
+    </div>
+  </div>
+  ${refImgs("femea-cotas.png","femea-usinagem-esquema.png","rosca interna, usinagem")}`;
+}
+
+function tabIso(r){
+  const {m,u} = r;
+  const cv = v => v==null ? '<span class="muted">—</span>' : v;
+  const ci = CLS_COL[state.cls];
+  const p = ISO_P.map(row=>{
+    const on = eq(row[0], m.P);
+    return `<tr class="${on?"hl":""}"><td class="mono">${fmtIn(row[0])}</td>${[1,2,3].map(c=>`<td class="r mono ${on&&c===ci?"hl":""}">${cv(row[c])}</td>`).join("")}<td class="r mono">${row[4]}</td><td class="r mono">${cv(row[5])}</td></tr>`;
+  }).join("");
+  const fx = FAIXAS.map((f,i)=>`<tr class="${u.faixa===i+1?"hl":""}"><td class="mono">${i+1}</td><td class="r mono">${fmtIn(f[0])}</td><td class="r mono">${fmtIn(f[1])}</td><td class="r mono">${fmt(Math.sqrt(f[0]*f[1]))}</td></tr>`).join("");
+  const kt = TD2_TAB.map(row=>{
+    const on = u.keyRow === row;
+    return `<tr class="${on?"hl":""}"><td class="mono">${row[0]}</td><td class="mono">${fmtIn(row[1])}</td><td class="mono muted">${row[0]*1000+Math.round(row[1]*100)}</td><td class="r mono">${row[2]}</td><td class="r mono">${cv(row[3])}</td></tr>`;
+  }).join("");
+  const r40 = R40.map(v=>`<span class="${v===u.Td2Used||v===u.TD2Used?"hl":""}">${v}</span>`).join("");
+  return `<div class="callout">Dados ISO 965-1 (µm) usados nas abas de usinagem. Fonte: tabelas da ISO 965-1 publicadas em machiningdoctor.com; <b>conferir na norma para tolerância crítica.</b> Linhas destacadas = valores usados para M${fmtIn(m.d)} × ${fmtIn(m.P)}, classe 6${state.cls}.</div>
+  <div class="grid2">
+    <div>
+      <div class="sec-title"><h3>Desvios e tolerâncias por passo</h3><span>es (valor absoluto, negativo na norma)</span></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>P (mm)</th><th class="r">es g</th><th class="r">es f</th><th class="r">es e</th><th class="r">Td(6)</th><th class="r">TD1(6)</th></tr></thead>
+        <tbody>${p}</tbody></table></div>
+    </div>
+    <div>
+      <div class="sec-title"><h3>Faixas de diâmetro</h3><span>dg = √(mín · máx)</span></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Nº</th><th class="r">d &gt; (mm)</th><th class="r">até (mm)</th><th class="r">dg</th></tr></thead>
+        <tbody>${fx}</tbody></table></div>
+      <div class="sec-title"><h3>Série R40</h3><span>µm · arredondamento das fórmulas</span></div>
+      <div class="r40">${r40}</div>
+    </div>
+  </div>
+  <div class="sec-title"><h3>Td2(6) e TD2(6) por faixa e passo</h3><span>combinações fora da tabela usam a fórmula aproximada 90·P^0,4·dg^0,1</span></div>
+  <div class="tbl-wrap" style="max-height:420px;overflow:auto"><table>
+    <thead><tr><th>Faixa</th><th>P (mm)</th><th>Chave</th><th class="r">Td2(6)</th><th class="r">TD2(6)</th></tr></thead>
+    <tbody>${kt}</tbody></table></div>`;
+}
+
+const TABS = {metrica:tabMetrica, m3d:tabM3d, f3d:tabF3d, mus:tabMus, fus:tabFus, iso:tabIso};
+
+/* =====================================================================
+   RENDER / EVENTOS
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const inputs = {P:$("inP"), d:$("inD"), e1:$("inE1"), e2:$("inE2"), k1:$("inK1"), k2:$("inK2")};
+
+function syncInputs(){
+  for (const k in inputs) if (document.activeElement !== inputs[k]) inputs[k].value = state[k];
+  $("rgD").value = state.d;
+  $("chipsP").innerHTML = PITCH_CHIPS.map(v=>`<button class="chip ${eq(v,state.P)?"on":""}" data-v="${v}">${fmtIn(v)}</button>`).join("");
+  $("chipsD").innerHTML = D_CHIPS.map(v=>`<button class="chip ${eq(v,state.d)?"on":""}" data-v="${v}">M${v}</button>`).join("");
+  document.querySelectorAll("#segCls button").forEach(b=>b.classList.toggle("on", b.dataset.v===state.cls));
+  document.querySelectorAll("#segDec button").forEach(b=>b.classList.toggle("on", +b.dataset.v===+state.dec));
+  document.querySelectorAll("#segSep button").forEach(b=>b.classList.toggle("on", b.dataset.v===state.sep));
+  document.querySelectorAll("#tabs .tab").forEach(b=>{ const on = b.dataset.t===state.tab; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); });
+}
+
+function render(){
+  const r = calc(state);
+  $("desig").textContent = `M${fmtIn(state.d)} × ${fmtIn(state.P)}`;
+  // avisos de geometria / tabela
+  const w = [];
+  if (r.m.d1 <= 0 || r.m.D1 <= 0) w.push("Passo grande demais para este diâmetro (Ø menor ≤ 0).");
+  if (!r.u.row) w.push("Passo fora da tabela ISO 965-1: valores de usinagem indisponíveis.");
+  if (!r.u.faixa) w.push("Ø fora das faixas ISO 965-1 (d ≤ 0,99 mm).");
+  $("geoWarn").innerHTML = w.join("<br>"); $("geoWarn").classList.toggle("show", w.length>0);
+  syncInputs();
+  renderScenarios(r);
+  renderStats(r);
+  if (r.m.d1 > 0 && r.m.D1 > 0){ drawProfile(r); drawOverview(r); }
+  $("tabBody").innerHTML = (TABS[state.tab] || tabF3d)(r);
+  persist();
+}
+
+function parseNum(v){ const n = parseFloat(String(v).replace(",", ".")); return isFinite(n) ? n : NaN; }
+for (const k in inputs){
+  inputs[k].addEventListener("input", e=>{
+    const v = parseNum(e.target.value);
+    const ok = isFinite(v) && v >= 0 && ((k!=="P" && k!=="d") || v > 0);
+    e.target.parentElement.classList.toggle("bad", !ok);
+    if (ok){ state[k] = v; render(); }
+  });
+  inputs[k].addEventListener("blur", e=>{ e.target.parentElement.classList.remove("bad"); e.target.value = state[k]; });
+}
+$("rgD").addEventListener("input", e=>{ state.d = +e.target.value; render(); });
+$("chipsP").addEventListener("click", e=>{ const b = e.target.closest(".chip"); if (b){ state.P = +b.dataset.v; render(); }});
+$("chipsD").addEventListener("click", e=>{ const b = e.target.closest(".chip"); if (b){ state.d = +b.dataset.v; render(); }});
+$("segCls").addEventListener("click", e=>{ const b = e.target.closest("button"); if (b){ state.cls = b.dataset.v; render(); }});
+$("segDec").addEventListener("click", e=>{ const b = e.target.closest("button"); if (b){ state.dec = +b.dataset.v; render(); }});
+$("segSep").addEventListener("click", e=>{ const b = e.target.closest("button"); if (b){ state.sep = b.dataset.v; render(); }});
+$("tabs").addEventListener("click", e=>{ const b = e.target.closest(".tab"); if (b){ state.tab = b.dataset.t; render(); }});
+document.addEventListener("click", e=>{
+  const sv = e.target.closest(".scen button, th[data-view]");
+  if (sv){
+    const v = sv.dataset.v || sv.dataset.view;
+    state.view = v;
+    if (v.startsWith("u") && !["mus","fus"].includes(state.tab)) state.tab = "mus";
+    if (v.startsWith("p") && !["m3d","f3d"].includes(state.tab) && sv.closest(".scen")) state.tab = "f3d";
+    render(); return;
+  }
+  const c = e.target.closest("[data-copy]");
+  if (c && c.dataset.copy) copy(c.dataset.copy);
+});
+
+let toastT;
+function toast(msg){ const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove("show"), 1400); }
+function copy(txt){
+  const done = () => toast("Copiado: " + txt);
+  try{
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(done, ()=>fallback());
+    else fallback();
+  }catch(e){ fallback(); }
+  function fallback(){
+    try{ const ta = document.createElement("textarea"); ta.value = txt; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); done(); }
+    catch(e){ toast(txt); }
+  }
+}
+
+// tema
+(function(){
+  let t = null; try{ t = localStorage.getItem("rosca-theme"); }catch(e){}
+  if (t) document.documentElement.dataset.theme = t;
+  $("themeBtn").addEventListener("click", ()=>{
+    const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    const nx = cur === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = nx;
+    try{ localStorage.setItem("rosca-theme", nx); }catch(e){}
+  });
+})();
+
+render();
+</script>
+</body>
+</html>
