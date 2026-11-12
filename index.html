@@ -268,6 +268,27 @@ td.hl{color:var(--accent-strong);font-weight:600}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 footer{max-width:1480px;margin:0 auto;padding:8px 24px 40px;color:var(--muted);font-size:12px}
 
+/* aba Info */
+.steps{counter-reset:s;list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.steps li{position:relative;padding:12px 14px 12px 50px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);font-size:13px;color:var(--text-2)}
+.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:14px;top:12px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.steps li b,.icard b{color:var(--text)}
+.nb{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 4px;border-radius:11px;background:var(--accent);color:#fff;font-size:11.5px;font-weight:600;font-family:"JetBrains Mono",monospace;margin-right:2px}
+.icards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.icard{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--surface-2)}
+.icard h4{margin:0 0 6px;font-size:13px;font-weight:600}
+.icard p{margin:0;font-size:12.5px;color:var(--text-2)}
+.icard p+p{margin-top:6px}
+.icard.em{border-color:var(--accent-line);background:var(--accent-soft)}
+.gloss{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.gloss div{display:flex;gap:10px;font-size:12.5px;color:var(--text-2);padding:8px 12px;border:1px solid var(--line);border-radius:10px;align-items:baseline}
+.gloss b{font-family:"JetBrains Mono",monospace;font-weight:500;color:var(--text);min-width:48px;flex:none}
+.desig-break{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.desig-break .part{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--surface-2)}
+.desig-break .big{font-family:"JetBrains Mono",monospace;font-size:24px;font-weight:500;color:var(--accent-strong);line-height:1}
+.desig-break .part span{font-size:12px;color:var(--text-2);line-height:1.35}
+.desig-break .part span.big{font-size:26px;color:var(--accent-strong);line-height:1;min-width:24px;text-align:center}
+td.why{font-size:12.5px;color:var(--text-2);min-width:240px}
 .svg-t{font-family:"JetBrains Mono",monospace;font-size:13px;fill:var(--text-2)}
 .svg-t.s{font-size:11.5px;fill:var(--muted)}
 
@@ -494,8 +515,8 @@ const PRESET_F = [["Fino",["4H","5H","4H5H"]],["Médio",["5G","6G","6H","5H6H"]]
 const PITCH_CHIPS = [0.5,0.7,0.75,0.8,1,1.25,1.5,1.75,2,2.5,3];
 const D_CHIPS = [3,4,5,6,8,10,12,15,16,20,24];
 const TAN30 = Math.tan(Math.PI/6);
-const TABS3 = [["metrica","Métrica"],["m3d","Macho 3D"],["f3d","Fêmea 3D"]];
-const TABSU = [["metrica","Métrica"],["mus","Macho usinagem"],["fus","Fêmea usinagem"],["iso","Tabela ISO 965"]];
+const TABS3 = [["metrica","Métrica"],["m3d","Macho 3D"],["f3d","Fêmea 3D"],["info","Info"]];
+const TABSU = [["metrica","Métrica"],["mus","Macho usinagem"],["fus","Fêmea usinagem"],["iso","Tabela ISO 965"],["info","Info"]];
 const CHEV = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5L6 8l3.5-3.5"/></svg>';
 
 /* =====================================================================
@@ -1222,7 +1243,166 @@ function tabIso(r){
     <tbody>${kt}</tbody></table></div>`, false)}`;
 }
 
-const TABS = {metrica:tabMetrica, m3d:tabM3d, f3d:tabF3d, mus:tabMus, fus:tabFus, iso:tabIso};
+/* ---------- Aba Info ---------- */
+/* Esboço do perfil de corte do macho com as cotas 1–9 (igual ao esboço CAD da planilha) */
+function machoSketch(r){
+  const {m} = r, P = m.P;
+  const mc = viewGeom(r, curView()).macho;
+  const rp = mc.rp, rc = mc.rc, R = mc.R, H2 = m.H/2;
+  const rTopL = rp + H2, rApex = rp - H2, rho = 1.2*P;
+  const W = 1000, gut = 270, padL = 16, plotW = W - gut - padL;
+  const xA = -1.1*P, xB = 2.5*P, s = plotW/(xB-xA);
+  const rMax = rApex + rho + 0.3*P, rMin = rApex - 0.55*P;
+  const H = Math.round((rMax-rMin)*s) + 16;
+  const sx = x => padL + (x-xA)*s, sy = rr => 8 + (rMax-rr)*s;
+  const xc = P, u = R*Math.cos(Math.PI/6), rC = rApex + 2*R;
+  const badge = (x,y,n) => `<g><circle cx="${x}" cy="${y}" r="11" fill="var(--accent)"/><text x="${x}" y="${y+4}" text-anchor="middle" style="font:600 11.5px Poppins,sans-serif;fill:#fff">${n}</text></g>`;
+  const dimH = (x0,x1,y,txt,n) => `<line x1="${x0}" x2="${x1}" y1="${y}" y2="${y}" stroke="var(--dim)" marker-start="url(#arS)" marker-end="url(#arS)"/>
+    <text class="svg-t" text-anchor="middle" x="${(x0+x1)/2}" y="${y-8}">${txt}</text>${badge((x0+x1)/2 + txt.length*4.2 + 18, y-12, n)}`;
+  // perfil de corte (triângulo fundamental com fundo arredondado)
+  const groove = `M${sx(xc-P/2)} ${sy(rTopL)} L${sx(xc-u)} ${sy(rC-R/2)} A${R*s} ${R*s} 0 0 0 ${sx(xc+u)} ${sy(rC-R/2)} L${sx(xc+P/2)} ${sy(rTopL)} Z`;
+  const ext = (H2+0.3*P)/H2;
+  const exL = [xc - (P/2)*ext, rApex + H2*ext], exR = [xc + (P/2)*ext, rApex + H2*ext];
+  const a1 = [xc + rho*Math.cos(2*Math.PI/3), rApex + rho*Math.sin(2*Math.PI/3)], a2 = [xc + rho*Math.cos(Math.PI/3), rApex + rho*Math.sin(Math.PI/3)];
+  const xG = padL + plotW, xLab = W - gut + 34;
+  const x6 = sx(xc + P/2 + 0.32*P);
+  const y9 = sy(rApex - 0.32*P);
+  const radial = (rr, n1, n2, t1, t2) => `
+    <line x1="${sx(0)}" x2="${xG+14}" y1="${sy(rr)}" y2="${sy(rr)}" stroke="var(--muted)" stroke-dasharray="${n1===4?'12 4 2 4':'3 4'}"/>
+    ${badge(xLab-14, sy(rr)-5, n1)}${badge(xLab+12, sy(rr)-5, n2)}
+    <text class="svg-t" x="${xLab+30}" y="${sy(rr)-6}">${t1}</text>
+    <text class="svg-t s" x="${xLab+30}" y="${sy(rr)+9}">${t2}</text>`;
+  const lx = sx(xc + R*Math.cos(-Math.PI/4)), ly = sy(rC + R*Math.sin(-Math.PI/4));
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Esboço do perfil do macho com cotas numeradas">
+    <defs><marker id="arS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1L10 5L0 9z" fill="var(--dim)"/></marker></defs>
+    <rect x="${sx(xA)-2}" y="${sy(rc)}" width="${sx(0)-sx(xA)+2}" height="${H}" fill="var(--macho-fill)" stroke="var(--macho-stroke)" stroke-width="1.5"/>
+    <text class="svg-t s" x="${sx(0)-8}" y="${H-10}" text-anchor="end">cilindro (face)</text>
+    ${radial(rc,2,3,`Ø d = ${fmt(2*rc)}`,`raio d/2 = ${fmt(rc)}`)}
+    ${radial(rp,4,5,`Ø d2 = ${fmt(2*rp)}`,`raio d2/2 = ${fmt(rp)}`)}
+    <line x1="${sx(exL[0])}" y1="${sy(exL[1])}" x2="${sx(xc)}" y2="${sy(rApex)}" stroke="var(--muted)" stroke-dasharray="3 4"/>
+    <line x1="${sx(exR[0])}" y1="${sy(exR[1])}" x2="${sx(xc)}" y2="${sy(rApex)}" stroke="var(--muted)" stroke-dasharray="3 4"/>
+    <path d="M${sx(a1[0])} ${sy(a1[1])} A${rho*s} ${rho*s} 0 0 1 ${sx(a2[0])} ${sy(a2[1])}" fill="none" stroke="var(--dim)" marker-start="url(#arS)" marker-end="url(#arS)"/>
+    <text class="svg-t" text-anchor="middle" x="${sx(xc)-14}" y="${sy(rApex+rho)-8}">60°</text>${badge(sx(xc)+22, sy(rApex+rho)-12, 8)}
+    <path d="${groove}" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round"/>
+    <circle cx="${sx(xc)}" cy="${sy(rC)}" r="${R*s}" fill="none" stroke="var(--accent)" stroke-dasharray="3 3" stroke-opacity=".7"/>
+    ${dimH(sx(xc-P/2), sx(xc+P/2), sy(rTopL + 0.16*P), `P = ${fmt(P)}`, 1)}
+    <line x1="${sx(xc+P/2)}" x2="${x6+6}" y1="${sy(rTopL)}" y2="${sy(rTopL)}" stroke="var(--muted)" stroke-dasharray="2 3"/>
+    <line x1="${x6}" x2="${x6}" y1="${sy(rTopL)}" y2="${sy(rp)}" stroke="var(--dim)" marker-start="url(#arS)" marker-end="url(#arS)"/>
+    <text class="svg-t" x="${x6+8}" y="${(sy(rTopL)+sy(rp))/2+4}">H/2 = ${fmt(H2)}</text>${badge(x6+8+("H/2 = "+fmt(H2)).length*8+16, (sy(rTopL)+sy(rp))/2, 6)}
+    <path d="M${lx} ${ly} L${lx+40} ${ly+34} L${lx+60} ${ly+34}" fill="none" stroke="var(--accent)"/>
+    <text class="svg-t" x="${lx+64}" y="${ly+38}">Ø ${fmt(2*R)}</text>${badge(lx+64+("Ø "+fmt(2*R)).length*8+16, ly+34, 7)}
+    <line x1="${sx(0)}" x2="${sx(0)}" y1="${sy(rc)}" y2="${y9+8}" stroke="var(--muted)" stroke-dasharray="2 3"/>
+    <line x1="${sx(xc)}" x2="${sx(xc)}" y1="${sy(rApex)}" y2="${y9+8}" stroke="var(--muted)" stroke-dasharray="2 3"/>
+    ${dimH(sx(0), sx(xc), y9, `P = ${fmt(P)}`, 9)}
+    <text class="svg-t s" x="${padL+6}" y="${H-10}">↓ eixo</text>
+  </svg>`;
+}
+
+function tabInfo(r){
+  const {m,u} = r;
+  const is3d = state.mode === "3d";
+  const mc = viewGeom(r, curView()).macho;
+  const valNote = is3d ? "valores nominais (o macho 3D não recebe folga)" : (state.vu==="u-mid" ? "valores do CAD no meio da tolerância" : "valores do CAD em matéria máxima (nominal + es)");
+  const cotas = [
+    [1,"Passo P",fmt(m.P),"Distância axial entre dois filetes. No esboço é a largura do triângulo de corte medida na linha superior (cota 6 acima da hélice).","Passo da hélice e largura do triângulo."],
+    [2,"Ø da extrusão d",fmt(2*mc.rc),"Ø externo do macho: o cilindro antes de cortar a rosca. É o que você mede com paquímetro na crista dos filetes."+(is3d?"":" Na usinagem já inclui o desvio es."),"Extrusão do cilindro."],
+    [3,"Raio do cilindro d/2",fmt(mc.rc),"A mesma cota 2 em raio, para cotar o esboço a partir do eixo.","Cota do esboço a partir do eixo."],
+    [4,"Ø da hélice d2",fmt(2*mc.rp),"Ø médio (de flanco): onde a largura do filete é igual à largura do vão (P/2). É a cota que realmente define o encaixe macho × fêmea.","Diâmetro da hélice de varredura."],
+    [5,"Raio da hélice d2/2",fmt(mc.rp),"Posição da linha da hélice no esboço. O perfil de corte é centrado nesta linha.","Linha de construção do esboço."],
+    [6,"Altura H/2",fmt(m.H/2),"Distância da linha da hélice até o topo do triângulo fundamental. Ali o triângulo tem largura exatamente P.","Posiciona a linha superior do triângulo."],
+    [7,"Ø do círculo 2·Rre",fmt(2*mc.R),"Arredondamento do fundo do filete (raiz). Tangencia os dois flancos e evita a ponta viva, reduzindo concentração de tensão e trinca.","Círculo tangente aos flancos na ponta."],
+    [8,"Ângulo 60°","60°","Ângulo entre os flancos do perfil métrico ISO. Constante para qualquer passo.","Ângulo entre as duas linhas do triângulo."],
+    [9,"Recuo P","" + fmt(m.P),"O perfil começa P fora da face do cilindro, para que o corte já entre “cheio” e a entrada da rosca saia limpa.","Início da hélice antes da face."],
+  ];
+  const cotaRows = cotas.map(([n,nm,v,what,cad])=>`<tr><td class="idx"><span class="nb">${n}</span></td><td class="desc"><b style="font-weight:500">${nm}</b></td><td class="why">${what}</td><td class="why">${cad}</td><td class="num" data-copy="${esc(v)}">${v}</td></tr>`).join("");
+
+  const steps = is3d ? [
+    "Informe <b>passo P</b> e <b>Ø nominal d</b> no painel (ou use os atalhos M3…M24).",
+    "Informe o <b>erro da impressora</b> (desvio típico das suas peças, ex.: 0,1 mm) e os fatores <b>k</b> mín./máx. (1,0 a 1,5).",
+    "Escolha o cenário no topo do perfil e veja se a avaliação dá <b>OK</b>. Se aparecer ATENÇÃO ou INVIÁVEL, aumente o passo antes de aumentar a folga.",
+    "Modele o <b>macho</b> com os valores da aba <b>Macho 3D</b> (todos nominais) e a <b>fêmea</b> com a coluna do cenário escolhido na aba <b>Fêmea 3D</b>.",
+    "Imprima um trecho curto (3 a 4 voltas), teste o encaixe e ajuste o <b>k</b> se ficar justo ou folgado demais."
+  ] : [
+    "Informe <b>passo P</b> e <b>Ø nominal d</b>. Passos fora da tabela ISO 965-1 não têm desvios definidos.",
+    "Escolha a <b>classe do macho</b> e a <b>classe da fêmea</b> pelos atalhos (Fino/Médio/Grosso) ou monte grau + posição manualmente. Padrão geral: <b>6H/6g</b>.",
+    "Confira o <b>ajuste resultante</b>: com folga, transição ou interferência, e a folga mín./máx. no Ø médio.",
+    "Escolha o modelo CAD: <b>matéria máxima</b> (peça no limite “mais cheio”, garante que monta) ou <b>meio da tolerância</b> (valor alvo da fabricação).",
+    "Modele com as colunas das abas <b>Macho usinagem</b> e <b>Fêmea usinagem</b>. As colunas <b>Mínimo</b> e <b>Máximo</b> são a faixa aceitável na inspeção."
+  ];
+  const cadSteps = [
+    "Extrude o cilindro com o <b>Ø d</b> <span class=\"nb\">2</span> no comprimento da rosca.",
+    "Crie a <b>hélice</b> com passo <b>P</b> <span class=\"nb\">1</span>, diâmetro <b>d2</b> <span class=\"nb\">4</span>, começando <b>P fora da face</b> <span class=\"nb\">9</span> e com comprimento = rosca + 2P.",
+    "Num plano que passa pelo eixo, desenhe o <b>triângulo de corte</b>: centro na linha da hélice <span class=\"nb\">5</span>, linha superior a <b>H/2</b> <span class=\"nb\">6</span> acima com largura <b>P</b> <span class=\"nb\">1</span>, flancos a <b>60°</b> <span class=\"nb\">8</span> e o <b>círculo</b> <span class=\"nb\">7</span> tangente na ponta.",
+    "Faça um <b>corte por varredura</b> (swept cut) do perfil ao longo da hélice. Confira medindo o Ø externo (= cota 2)."
+  ];
+
+  // interpretação do macho
+  let interp;
+  if (is3d){
+    interp = `<div class="icards">
+      <div class="icard em"><h4>O macho é o gabarito</h4><p>No 3D o macho fica <b>nominal</b>: d, d2, Rre e o perfil são os da norma. Toda a folga vai para a fêmea, então o mesmo macho serve para qualquer cenário de erro.</p></div>
+      <div class="icard"><h4>Como conferir a peça impressa</h4><p>Meça o <b>Ø externo</b> com paquímetro e compare com a cota 2 (${fmt(m.d)} mm). A diferença mostra o erro real da sua impressora; use esse valor no campo “Erro”.</p></div>
+      <div class="icard"><h4>Se a rosca não entrar</h4><p>Aumente <b>k</b> (até 1,5) ou use o cenário com erro maior. Se o engajamento ficar abaixo de 0,2 mm, a solução é <b>aumentar o passo</b>, não a folga.</p></div>
+      <div class="icard"><h4>Se ficar folgada demais</h4><p>Diminua <b>k</b> ou o erro. O <b>jogo axial</b> (2·δ·tan30°) indica quanto a peça “anda” para frente e para trás quando montada.</p></div>
+      <div class="icard"><h4>Dividir a folga</h4><p>Alternativa: tire δ/2 das cotas 2, 3, 4 e 5 do macho e use δ/2 na fêmea. Útil quando macho e fêmea são ambos impressos e o erro afeta os dois.</p></div>
+      <div class="icard"><h4>Orientação de impressão</h4><p>Com o eixo da rosca na vertical, os flancos saem mais fiéis. Na horizontal, o perfil distorce pelas camadas; prefira passos maiores (P ≥ 1,5).</p></div>
+    </div>`;
+  } else {
+    const ms = state.ms;
+    const brk = ms.pos==="c"
+      ? `<div class="part"><span class="big">es${sNum(ms.es)}</span><span>Desvio personalizado<br>${ms.es>0?"macho maior que o nominal → interferência":"em µm aplicado a d e d2"}</span></div>
+         <div class="part"><span class="big">${ms.g2}</span><span>Grau do Ø médio d2<br>Td2 = ${fmtUm(u.Td2Um)} µm</span></div>
+         <div class="part"><span class="big">${ms.gd}</span><span>Grau do Ø maior d<br>Td = ${fmtUm(u.TdUm)} µm</span></div>`
+      : `<div class="part"><span class="big">${ms.g2}</span><span>Grau de tolerância do Ø médio d2<br>Td2 = ${fmtUm(u.Td2Um)} µm</span></div>
+         <div class="part"><span class="big">${ms.pos}</span><span>Posição da tolerância<br>es = ${umSigned(u.esUm)}</span></div>
+         <div class="part"><span class="big">${ms.gd}${ms.pos}</span><span>Grau do Ø maior d${ms.gd===ms.g2?" (igual ao d2,<br>por isso a classe se escreve só ${ms.g2}${ms.pos})":""}<br>Td = ${fmtUm(u.TdUm)} µm</span></div>`;
+    interp = `<p class="hint" style="margin:0 0 10px">Classe atual do macho: <b>${esc(desigM())}</b></p>
+    <div class="desig-break">${brk}</div>
+    <div class="icards">
+      <div class="icard em"><h4>Número = grau (qualidade)</h4><p>Quanto <b>menor</b> o número, mais <b>estreita</b> a tolerância: 3–4 = fino (rosca de precisão), 5–6 = médio (uso geral), 7–9 = grosso (peças sujas, revestidas ou de baixa precisão).</p></div>
+      <div class="icard em"><h4>Letra = posição (folga)</h4><p><b>h</b> = sem folga (es = 0). <b>g</b> = pouca folga (padrão). <b>f</b> e <b>e</b> = mais folga, para revestimento (zinco, pintura) ou montagem rápida. Na fêmea: <b>H</b> = EI 0 e <b>G</b> = EI positivo.</p></div>
+      <div class="icard"><h4>Matéria máxima × meio da tolerância</h4><p><b>Matéria máxima</b> é o macho no limite “mais gordo” (d máx., d2 máx.): se monta assim, monta sempre. <b>Meio da tolerância</b> é o alvo de fabricação e o modelo mais realista.</p></div>
+      <div class="icard"><h4>Mínimo e Máximo</h4><p>São a faixa aceitável da peça usinada. d2 entre <b>${fmt(u.mG6)}</b> e <b>${fmt(u.mH6)}</b> mm e d entre <b>${fmt(u.mG4)}</b> e <b>${fmt(u.mH4)}</b> mm. Fora disso a peça é rejeitada.</p></div>
+      <div class="icard"><h4>Como inspecionar</h4><p><b>Anel calibrador</b> passa/não-passa da classe (ex.: 6g) para aceitar o lote. <b>Micrômetro de 3 arames</b> mede o d2. <b>Micrômetro</b> ou paquímetro mede o d.</p></div>
+      <div class="icard"><h4>Lendo o ajuste</h4><p><b>Com folga</b>: sempre monta. <b>Transição</b>: depende das peças, pode ficar justo. <b>Interferência</b>: precisa de força, aquecimento ou trava; fora da ISO 965-1.</p></div>
+    </div>`;
+  }
+
+  const femRows = [
+    [1,"Passo P","Igual ao macho."],
+    [2,"Ø da hélice = D1","Diâmetro da hélice de varredura da fêmea (no Ø menor)."+(is3d?" Recebe +2δ.":" Recebe EI.")],
+    [3,"Ø do furo = D1","Pré-furo antes de cortar a rosca (Ø menor da fêmea)."+(is3d?" Recebe +2δ.":" Tolerância TD1.")],
+    [4,"Raio D1/2","Cota 3 em raio, para o esboço."],
+    [5,"Raio d2/2","Linha média do perfil (Ø médio D2). Define o encaixe."+(is3d?" Recebe +δ.":" Tolerância TD2.")],
+    [6,"Altura H/2","Da linha média até a base do triângulo de corte."],
+    [7,"Ø pequeno P/8","Arredondamento na ponta do perfil (fundo da rosca da fêmea, no Ø maior)."],
+    [8,"Ângulo 60°","Igual ao macho."],
+    [9,"Recuo P","A hélice começa P fora da face."],
+  ].map(([n,nm,t])=>`<tr><td class="idx"><span class="nb">${n}</span></td><td class="desc"><b style="font-weight:500">${nm}</b></td><td class="why">${t}</td></tr>`).join("");
+
+  const gloss = [
+    ["P","Passo: avanço axial por volta"],["d","Ø nominal / Ø maior do macho"],["d1","Ø menor (fundo) do macho"],
+    ["d2 = D2","Ø médio, onde filete = vão"],["D1","Ø menor da fêmea (furo)"],["D","Ø maior da fêmea"],
+    ["H","Altura do triângulo fundamental = 0,866·P"],["Rre / Rri","Raio do fundo externo / interno"],
+    ["he / hi","Altura do filete externo / interno"],["a","Folga de fundo = 0,036·P"],["S","Seção resistente do macho (mm²)"],
+    ...(is3d ? [["erro","Desvio típico da impressora (±)"],["k","Fator de segurança da folga (1,0–1,5)"],["g","Folga real no flanco = k × erro"],["δ","Deslocamento radial do perfil da fêmea = 2g"],["engaj.","Altura de contato que sobra = 0,5413·P − δ"]]
+           : [["es","Desvio superior do macho (negativo = folga)"],["EI","Desvio inferior da fêmea (positivo = folga)"],["Td / Td2","Tolerância do Ø maior / médio do macho"],["TD1 / TD2","Tolerância do Ø menor / médio da fêmea"],["grau","Número da classe: largura da tolerância"],["posição","Letra da classe: distância até o nominal"],["dg","Ø médio geométrico da faixa ISO"],["R40","Série de números preferenciais para arredondar"]])
+  ].map(([k,v])=>`<div><b>${k}</b><span>${v}</span></div>`).join("");
+
+  return `<div class="callout"><b>Info · ${is3d?"Impressão 3D":"Usinagem"}.</b> O conteúdo segue o modo selecionado no topo. As cotas numeradas são as mesmas da coluna Nº das tabelas e do esboço CAD da planilha.</div>
+  ${fold("info-uso","Como usar","passo a passo",`<ol class="steps">${steps.map(s=>`<li>${s}</li>`).join("")}</ol>`)}
+  ${fold("info-sketch","Esboço do macho","cotas numeradas · "+valNote,`<div class="plot">${machoSketch(r)}</div>
+    <div class="tbl-wrap" style="margin-top:14px"><table>
+      <thead><tr><th>Nº</th><th>Cota</th><th>O que significa</th><th>Uso no CAD</th><th class="r">Valor atual</th></tr></thead>
+      <tbody>${cotaRows}</tbody></table></div>`)}
+  ${fold("info-cad","Modelando o macho no CAD","SolidWorks, Fusion, Onshape…",`<ol class="steps">${cadSteps.map(s=>`<li>${s}</li>`).join("")}</ol>`)}
+  ${fold("info-interp","Como interpretar o macho", is3d?"impressão 3D":"classes de tolerância ISO 965-1", interp)}
+  ${fold("info-femea","Cotas da fêmea","mesma numeração, perfil invertido",`<div class="tbl-wrap"><table>
+    <thead><tr><th>Nº</th><th>Cota</th><th>O que significa</th></tr></thead><tbody>${femRows}</tbody></table></div>`, false)}
+  ${fold("info-gloss","Glossário","símbolos usados no site",`<div class="gloss">${gloss}</div>`, false)}`;
+}
+
+const TABS = {metrica:tabMetrica, m3d:tabM3d, f3d:tabF3d, mus:tabMus, fus:tabFus, iso:tabIso, info:tabInfo};
 
 /* =====================================================================
    RENDER / EVENTOS
