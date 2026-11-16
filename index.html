@@ -346,7 +346,8 @@ footer{max-width:1480px;margin:0 auto;padding:8px 24px 40px;color:var(--muted);f
       <details class="group" data-fold="g-mat" open>
         <summary>Material<span class="badge" id="bMat"></span><span class="chev"></span></summary>
         <div class="group-b">
-          <div class="seg text big" data-key="mat"><button data-v="inox">Inox</button><button data-v="al">Alumínio</button><button data-v="latao">Latão</button></div>
+          <div class="seg text big" data-key="mat" data-mode-only="us"><button data-v="inox">Inox</button><button data-v="al">Alumínio</button><button data-v="latao">Latão</button></div>
+          <div class="seg text big" data-mode-only="3d"><button class="on" disabled style="cursor:default">PLA</button></div>
           <div class="hint" id="matHint"></div>
         </div>
       </details>
@@ -354,7 +355,8 @@ footer{max-width:1480px;margin:0 auto;padding:8px 24px 40px;color:var(--muted);f
       <details class="group" data-fold="g-fit" open>
         <summary>Ajuste<span class="badge" id="bFit"></span><span class="chev"></span></summary>
         <div class="group-b">
-          <div class="seg text big" data-key="fit"><button data-v="folgado">Folgado</button><button data-v="medio">Médio</button><button data-v="justo">Justo</button></div>
+          <div class="seg text big" data-key="fit" data-mode-only="us"><button data-v="folgado">Folgado</button><button data-v="medio">Médio</button><button data-v="justo">Justo</button></div>
+          <div class="seg text big" data-key="fit3" data-mode-only="3d"><button data-v="folgado">Folgado</button><button data-v="medio">Médio</button><button data-v="justo">Justo</button></div>
           <div class="hint" id="fitHint"></div>
           <button class="btn-link" id="btnReset" hidden>Classes alteradas manualmente · voltar ao ajuste sugerido</button>
         </div>
@@ -366,13 +368,13 @@ footer{max-width:1480px;margin:0 auto;padding:8px 24px 40px;color:var(--muted);f
           <div class="field" data-mode-only="3d">
             <label for="inErr">Erro da impressora <small>mm</small></label>
             <div class="inp"><input id="inErr" data-num="err" type="number" step="0.01" min="0" inputmode="decimal"><span class="unit">mm</span></div>
-            <div class="hint">Folga extra na fêmea: δ = 2 × erro (radial).</div>
+            <div class="hint">Folga no flanco g = k × erro · δ radial na fêmea = 2g.</div>
           </div>
           <div class="fit-box" id="fitBox"></div>
         </div>
       </details>
 
-      <details class="group adv" data-fold="g-adv">
+      <details class="group adv" data-fold="g-adv" data-mode-only="us">
         <summary>Classes avançadas (e f g h…)<span class="badge" id="bAdv"></span><span class="chev"></span></summary>
         <div class="group-b">
           <div class="sub-h">Macho</div>
@@ -493,6 +495,14 @@ const MATS = {
   al:   {nome:"Alumínio", shift:1, why:"Macio e com tendência a engripar e arrancar filete: +1 posição de folga."},
   latao:{nome:"Latão",    shift:0, why:"Usina bem e quase não engripa: usa a classe base do ajuste."}
 };
+/* Impressão 3D: material único (PLA), sem classes ISO. O ajuste escolhe o fator k da planilha
+   (folga real no flanco g = k × erro; k de 1,0 a 1,5). */
+const FITS3 = {
+  folgado:{nome:"Folgado", k:1.5,  desc:"k = 1,5: encaixa fácil mesmo com variação entre impressões."},
+  medio:  {nome:"Médio",   k:1.25, desc:"k = 1,25: equilíbrio entre folga e firmeza."},
+  justo:  {nome:"Justo",   k:1.0,  desc:"k = 1,0: folga igual ao erro; pouco jogo, pode exigir lixar ou ajustar."}
+};
+const PLA = {nome:"PLA", why:"Impressão 3D em PLA. Não há classes ISO: o macho fica nominal e a fêmea recebe a folga da impressora."};
 function suggested(mat, fit){
   const F = FITS[fit], M = MATS[mat];
   const idx = Math.min(F.base + M.shift, LADDER.length-1);
@@ -504,12 +514,13 @@ function suggested(mat, fit){
    ESTADO
    ===================================================================== */
 const DEFAULTS = {
-  mode:"us", P:0.75, d:15, err:0.1, mat:"latao", fit:"medio", custom:false,
+  mode:"us", P:0.75, d:15, err:0.1, mat:"latao", fit:"medio", fit3:"medio", custom:false,
   ms:{pos:"g", g2:6, gd:6, es:20}, fs:{pos:"H", g2:6, g1:6, ei:0},
   model:"max", tab:"res", dec:3, sep:",", col:{}
 };
 const state = JSON.parse(JSON.stringify(DEFAULTS));
 const TABS = [["res","Resultados"],["info","Info"],["metrica","Métrica"],["macho","Macho"],["femea","Fêmea"],["iso","Tabela ISO 965"]];
+const tabsFor = mode => mode==="3d" ? TABS.filter(t=>t[0]!=="iso") : TABS;
 (function load(){
   try{
     const s = JSON.parse(localStorage.getItem("rosca-state-v3")||"{}");
@@ -524,7 +535,7 @@ const TABS = [["res","Resultados"],["info","Info"],["metrica","Métrica"],["mach
     setN(state,"P","p"); setN(state,"d","d"); setN(state,"err","err");
     if (["3d","us"].includes(q.get("m"))) state.mode = q.get("m");
     if (q.get("mat") in MATS) state.mat = q.get("mat");
-    if (q.get("aj") in FITS){ state.fit = q.get("aj"); state.custom = false; }
+    if (q.get("aj") in FITS){ if (state.mode==="3d") state.fit3 = q.get("aj"); else { state.fit = q.get("aj"); state.custom = false; } }
     if (q.get("mc") || q.get("fc") || q.get("mp") || q.get("fp")){
       state.custom = true;
       if (q.get("mc")) applyPreset("ms", q.get("mc"));
@@ -538,6 +549,7 @@ const TABS = [["res","Resultados"],["info","Info"],["metrica","Métrica"],["mach
   }catch(e){}
   if (!(state.mat in MATS)) state.mat = "latao";
   if (!(state.fit in FITS)) state.fit = "medio";
+  if (!(state.fit3 in FITS3)) state.fit3 = "medio";
   if (!["e","f","g","h","c"].includes(state.ms.pos)) state.ms.pos = "g";
   if (!["G","H","c"].includes(state.fs.pos)) state.fs.pos = "H";
   if (!(state.ms.g2 in F_TD2E)) state.ms.g2 = 6;
@@ -566,13 +578,16 @@ function syncClasses(){
 function persist(){
   try{ localStorage.setItem("rosca-state-v3", JSON.stringify(state)); }catch(e){}
   try{
-    const o = {m:state.mode, d:state.d, p:state.P, mat:state.mat};
-    if (state.custom){
-      if (state.ms.pos==="c") Object.assign(o,{mp:"c",es:state.ms.es}); else o.mc = desigM();
-      if (state.fs.pos==="c") Object.assign(o,{fp:"c",ei:state.fs.ei}); else o.fc = desigF();
-    } else o.aj = state.fit;
-    if (state.mode==="3d") o.err = state.err;
-    o.cad = state.model;
+    const o = {m:state.mode, d:state.d, p:state.P};
+    if (state.mode==="3d"){ o.aj = state.fit3; o.err = state.err; }
+    else {
+      o.mat = state.mat;
+      if (state.custom){
+        if (state.ms.pos==="c") Object.assign(o,{mp:"c",es:state.ms.es}); else o.mc = desigM();
+        if (state.fs.pos==="c") Object.assign(o,{fp:"c",ei:state.fs.ei}); else o.fc = desigF();
+      } else o.aj = state.fit;
+      o.cad = state.model;
+    }
     history.replaceState(null,"","?"+new URLSearchParams(o).toString()+location.hash);
   }catch(e){}
 }
@@ -670,16 +685,21 @@ function calc(s){
   u.fitType = u.fitMin >= -1e-12 ? "folga" : (u.fitMax <= 1e-12 ? "interf" : "trans");
   u.folgaFlanco = u.fitMin/4; u.jogoAxial = u.fitMin*TAN30;
 
-  // ---- impressão 3D: uma impressora, folga extra só na fêmea
-  const p3 = {err:s.err, g:s.err, delta:2*s.err};
+  // ---- impressão 3D (PLA): sem classes ISO; macho nominal, folga toda na fêmea
+  const k = FITS3[s.fit3].k;
+  const p3 = {err:s.err, k, g:k*s.err};
+  p3.delta = 2*p3.g;
   p3.axial = 2*p3.delta*TAN30;
+  p3.holeInc = 2*p3.delta;
   const is3d = s.mode === "3d";
   const dl = is3d ? p3.delta : 0;
 
   // ---- geometria do modelo CAD (resultado)
-  const mid = s.model === "mid";
-  const mg = mid ? {rp:u.mI7, rc:u.mI5, R:m.Rre} : {rp:u.mE7, rc:u.mE5, R:m.Rre};
-  const fg0 = mid ? {rp:u.fI7, rc:u.fI6, R:P/16} : {rp:u.fE7, rc:u.fE6, R:P/16};
+  const mid = !is3d && s.model === "mid";
+  const mg = is3d ? {rp:m.d2/2, rc:m.d/2, R:m.Rre}
+           : mid ? {rp:u.mI7, rc:u.mI5, R:m.Rre} : {rp:u.mE7, rc:u.mE5, R:m.Rre};
+  const fg0 = is3d ? {rp:m.d2/2, rc:m.D1/2, R:P/16}
+           : mid ? {rp:u.fI7, rc:u.fI6, R:P/16} : {rp:u.fE7, rc:u.fE6, R:P/16};
   const fg = {rp:fg0.rp + dl, rc:fg0.rc + dl, R:fg0.R};
   const cad = {mid, dl, mg, fg, fg0};
   // macho: centro do raio do fundo e altura do filete
@@ -699,8 +719,6 @@ function calc(s){
   cad.statusTxt = cad.eng <= 0 ? "INVIÁVEL: filetes não se tocam" : (cad.eng < 0.2 ? "ATENÇÃO: pouco engajamento" : "OK");
   // folga total no Ø médio do modelo (diametral)
   cad.fitModel = 2*(fg.rp - mg.rp);
-  cad.fitMin3d = u.fitMin + 2*dl;
-  cad.fitMax3d = u.fitMax + 2*dl;
   return {m, u, p3, cad, is3d};
 }
 
@@ -968,12 +986,90 @@ function kvItem(l, v, em, copy, f){ const c = copy!==undefined ? copy : v; retur
 const prow = (l, sub, v, unit, key) => `<div class="prow ${key?"key":""}" data-copy="${esc(v)}"><span class="l">${l}${sub?`<small>${sub}</small>`:""}</span><span class="v">${v}${unit?`<small>${unit}</small>`:""}</span></div>`;
 const modelSeg = () => `<div class="seg text" data-key="model"><button data-v="max" class="${state.model==="max"?"on":""}">CAD: matéria máxima</button><button data-v="mid" class="${state.model==="mid"?"on":""}">CAD: meio da tolerância</button></div>`;
 const posTxt = n => `+${n} ${n===1?"posição":"posições"}`;
-const modelName = () => state.model==="mid" ? "meio da tolerância" : "matéria máxima";
+const modelName = () => state.mode==="3d" ? "nominais (3D)" : state.model==="mid" ? "meio da tolerância" : "matéria máxima";
 
 /* =====================================================================
    ABA RESULTADOS
    ===================================================================== */
-function tabRes(r){
+function tabRes(r){ return r.is3d ? tabRes3d(r) : tabResUs(r); }
+
+/* ---------- Resultados · impressão 3D (PLA) ---------- */
+function tabRes3d(r){
+  const {m,cad,p3} = r, F = FITS3[state.fit3];
+  const head = `<div class="res-head">
+      <div>
+        <div class="big">M${fmtIn(m.d)} × ${fmtIn(m.P)} · PLA</div>
+        <div class="hint" style="margin:2px 0 0">Impressão 3D · ajuste ${F.nome} (k ${fmtIn(F.k)}) · erro ${fmt(p3.err)} mm → δ ${fmt(p3.delta)} mm</div>
+      </div>
+      ${engChip(cad)}
+    </div>`;
+  const legend = `<div class="legend">
+      <span><i class="sw m"></i>Macho (externo) nominal</span>
+      <span><i class="sw f"></i>Fêmea (interno) com folga δ</span>
+      <span><i class="sw p"></i>Ø médio nominal d2</span>
+      <span class="muted">Escala real</span>
+    </div>`;
+  const macho = `<div class="pcard"><h4><i class="sw m"></i>Macho · externo<small>nominal</small></h4>
+      ${prow("Ø eixo","diâmetro externo (crista)",fmt(2*cad.mCrest),"mm",true)}
+      ${prow("Passo","",fmt(m.P),"mm",true)}
+      ${prow("h filete","altura total do filete externo",fmt(cad.hExt),"mm",true)}
+      ${prow("R do fundo","raio da raiz",fmt(cad.mg.R),"mm",true)}
+      ${prow("Centro do R → linha de centro","distância radial do eixo ao centro do R",fmt(cad.mC),"mm",true)}
+      ${prow("Ø da hélice (d2)","diâmetro médio, referência dos flancos",fmt(2*cad.mg.rp),"mm")}
+      ${prow("Ângulo do perfil","","60°","")}
+      ${prow("Recuo da hélice","início P antes da face",fmt(m.P),"mm")}
+    </div>`;
+  const femea = `<div class="pcard"><h4><i class="sw f"></i>Fêmea · interno<small>nominal + δ ${fmt(cad.dl)}</small></h4>
+      ${prow("Ø furo","diâmetro do pré-furo (D1 + 2δ)",fmt(2*cad.fCrest),"mm",true)}
+      ${prow("Passo","",fmt(m.P),"mm",true)}
+      ${prow("h filete","altura total do filete interno",fmt(cad.hInt),"mm",true)}
+      ${prow("R do fundo","raio da raiz",fmt(cad.fg.R),"mm",true)}
+      ${prow("Centro do R → linha de centro","distância radial do eixo ao centro do R",fmt(cad.fC),"mm",true)}
+      ${prow("Ø da hélice (D2 + 2δ)","diâmetro médio, referência dos flancos",fmt(2*cad.fg.rp),"mm")}
+      ${prow("Ø fundo da rosca","diâmetro maior resultante",fmt(2*cad.fRoot),"mm")}
+      ${prow("Ângulo do perfil","","60°","")}
+    </div>`;
+  const step1 = fold("r3-d1","1. Material e ajuste",`PLA · ${F.nome} → k ${fmtIn(F.k)}`, `<div class="kv" style="margin-bottom:12px">
+      ${kvItem("Material","PLA",false,"PLA",PLA.why)}
+      ${kvItem("Ajuste",F.nome,false,F.nome,F.desc)}
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Ajuste</th><th class="r">Fator k</th><th class="r">g = k × erro</th><th class="r">δ = 2g</th><th class="r">Engajamento</th></tr></thead>
+      <tbody>${Object.entries(FITS3).map(([kk,f])=>{ const g=f.k*p3.err, dlt=2*g, eng=0.54125*m.P-dlt; const on = kk===state.fit3;
+        return `<tr class="${on?"hl":""}"><td><b style="font-weight:500">${f.nome}</b></td><td class="r mono">${fmtIn(f.k)}</td>${numTd(g)}${numTd(dlt)}${numTd(eng)}</tr>`; }).join("")}</tbody></table></div>
+    <p class="hint">Sem classes ISO na impressão 3D: o macho fica nominal (gabarito) e a folga vai toda na fêmea.</p>`);
+  const step2 = fold("r3-d2","2. Folga da impressora","δ = deslocamento radial do perfil da fêmea para fora", `<div class="kv one">
+      ${kvItem("Erro da impressora", fmt(p3.err)+" mm", false, fmt(p3.err), "desvio típico (±) das peças impressas")}
+      ${kvItem("Fator k", fmtIn(p3.k), false, fmtIn(p3.k), "definido pelo ajuste")}
+      ${kvItem("Folga real no flanco g = k × erro", fmt(p3.g)+" mm", false, fmt(p3.g))}
+      ${kvItem("δ radial a aplicar = 2 × g", fmt(p3.delta)+" mm", true, fmt(p3.delta), "flancos a 30°: deslocar δ na radial dá δ/2 de folga no flanco")}
+      ${kvItem("Jogo axial total = 2·δ·tan30°", fmt(p3.axial)+" mm", false, fmt(p3.axial))}
+      ${kvItem("Aumento do Ø do furo = 2δ", fmt(p3.holeInc)+" mm", false, fmt(p3.holeInc))}
+      ${kvItem("Engajamento radial restante = 0,5413·P − δ", fmt(cad.eng)+" mm", true, fmt(cad.eng), "limite indicativo 0,2 mm")}
+      <div style="text-align:right">${engChip(cad)}</div>
+    </div>`);
+  const step3 = fold("r3-d3","3. Do modelo ao desenho","como os valores do resultado são obtidos", `<div class="kv one">
+      ${kvItem("Raio da crista do macho = d/2", fmt(cad.mCrest)+" mm", false, fmt(cad.mCrest))}
+      ${kvItem("Raio da hélice do macho = d2/2", fmt(cad.mg.rp)+" mm", false, fmt(cad.mg.rp))}
+      ${kvItem("Centro do R do macho = d2/2 − √3·P/4 + 2R", fmt(cad.mC)+" mm", true, fmt(cad.mC), "R = Rre = 0,14434·P, tangente aos flancos de 60°")}
+      ${kvItem("h filete externo = crista − (centro − R)", fmt(cad.hExt)+" mm", true, fmt(cad.hExt))}
+      ${kvItem("Raio do furo = D1/2 + δ", fmt(cad.fCrest)+" mm", false, fmt(cad.fCrest))}
+      ${kvItem("Raio da hélice da fêmea = d2/2 + δ", fmt(cad.fg.rp)+" mm", false, fmt(cad.fg.rp))}
+      ${kvItem("Centro do R da fêmea = (d2/2 + δ) + √3·P/4 − 2R", fmt(cad.fC)+" mm", true, fmt(cad.fC), "R = P/16 (Ø P/8, como na planilha)")}
+      ${kvItem("h filete interno = (centro + R) − raio do furo", fmt(cad.hInt)+" mm", true, fmt(cad.hInt))}
+    </div>`, false);
+  const over = fold("res-over","Vista geral","proporção real entre diâmetro e passo", `<div class="plot">${drawOverview(r)}</div>`, false);
+  return `${head}
+    <div class="plot">${drawResult(r)}</div>
+    ${legend}
+    <div class="pcards">${macho}${femea}</div>
+    <p class="hint">Clique em um valor para copiar. Imprima antes um trecho curto (3 a 4 voltas) e, se ficar justo ou folgado demais, troque o ajuste.</p>
+    <div class="dev-h"><h2>Desenvolvimento</h2><span>cálculos e folgas que levam ao resultado acima</span></div>
+    ${step1}${step2}${step3}${over}`;
+}
+
+/* ---------- Resultados · usinagem ---------- */
+function tabResUs(r){
   const {m,u,cad,p3,is3d} = r;
   const ajuste = state.custom ? "Personalizado" : FITS[state.fit].nome;
   const head = `<div class="res-head">
@@ -1121,7 +1217,58 @@ const cadHeads = (mE, mI) => `
   <th class="r">Tolerância T</th><th class="r">Mínimo</th><th class="r">Máximo</th>
   <th class="r clickable ${state.model==="mid"?"sel":""}" data-model="mid">CAD: meio da tol.<br><span class="muted" style="font-weight:400">${mI}</span></th>`;
 
-function tabMacho(r){
+function tabMacho(r){ return r.is3d ? tabMacho3d(r) : tabMachoUs(r); }
+function tabFemea(r){ return r.is3d ? tabFemea3d(r) : tabFemeaUs(r); }
+
+function tabMacho3d(r){
+  const {m} = r;
+  const vals = [m.P, m.d, m.d/2, m.d2, m.d2/2, m.H/2, 2*m.Rre, 60, m.P];
+  const rows = vals.map((v,i)=>`<tr><td class="idx">${i+1}</td><td class="desc">${ROW_DESC_M[i]}</td>${i===7?`<td class="num sel">60°</td>`:numTd(v,"sel")}</tr>`).join("");
+  return `<div class="callout"><b>Macho = nominal.</b> Na impressão 3D nenhuma cota do macho recebe folga: toda a folga vai na <b>fêmea</b>. Assim o macho serve de gabarito e pode ser conferido com paquímetro.</div>
+  <div class="sec-title"><h3>Valores para o desenho 3D — rosca externa</h3><span>PLA · impressão 3D</span></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Nº</th><th>Descrição</th><th class="r sel">Valor CAD (nominal)</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>
+  ${notes("m3-notes",[
+    "O macho é o gabarito: mantém d, d2, Rre e o perfil nominais.",
+    "Se preferir dividir a folga: subtraia δ/2 das cotas 2 e 3 (Ø e raio do cilindro) e 4 e 5 (Ø e raio da hélice) do macho, e use δ/2 na fêmea.",
+    "A hélice começa P fora da face (cota 9) para o corte sair limpo na entrada da rosca."
+  ])}
+  ${refImgs("m3-ref","macho-cotas.png","macho-3d-esquema.png","rosca externa")}`;
+}
+
+function tabFemea3d(r){
+  const {m,p3,cad} = r, dl = p3.delta;
+  const def = [
+    [m.P,0,"NÃO (nominal)"],[m.D1,2,"SIM: + 2δ (diâmetro)"],[m.D1,2,"SIM: + 2δ (diâmetro)"],
+    [m.D1/2,1,"SIM: + δ (raio)"],[m.d2/2,1,"SIM: + δ (raio)"],[m.H/2,0,"NÃO (nominal)"],
+    [m.P/8,0,"NÃO (nominal)"],[60,0,"NÃO (nominal)"],[m.P,0,"NÃO (nominal)"],
+  ];
+  const rows = def.map(([nom,k,tag],i)=>`<tr class="${k?"yes":""}"><td class="idx">${i+1}</td><td class="desc">${ROW_DESC_F[i]}</td>${i===7?`<td class="num">60°</td>`:numTd(nom)}<td><span class="tag ${k?"yes":""}">${tag}</span></td>${i===7?`<td class="num sel">60°</td>`:numTd(nom + k*dl,"sel")}</tr>`).join("");
+  return `<div class="callout">Fêmea com folga da impressora: <b>δ = 2 × k × erro = ${fmt(dl)} mm</b> (raio) · ajuste ${FITS3[state.fit3].nome} · ${engChip(cad)}</div>
+  <div class="sec-title"><h3>Valores para o desenho 3D — rosca interna</h3><span>linhas em destaque recebem δ</span></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Nº</th><th>Descrição</th><th class="r">Nominal (folga 0,0)</th><th>Aplicar folga?</th><th class="r sel">Valor CAD 3D</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>
+  ${fold("f3-calc","Cálculo da folga","",`<div class="kv">
+    ${kvItem("Erro da impressora", fmt(p3.err)+" mm", false, fmt(p3.err))}
+    ${kvItem("Fator k (ajuste)", fmtIn(p3.k), false)}
+    ${kvItem("Folga no flanco g = k × erro", fmt(p3.g)+" mm", false, fmt(p3.g))}
+    ${kvItem("δ radial = 2 × g", fmt(p3.delta)+" mm", true, fmt(p3.delta))}
+    ${kvItem("Jogo axial total = 2·δ·tan30°", fmt(p3.axial)+" mm", false, fmt(p3.axial))}
+    ${kvItem("Aumento do Ø do furo = 2δ", fmt(p3.holeInc)+" mm", false, fmt(p3.holeInc))}
+    ${kvItem("Engajamento radial = 0,5413·P − δ", fmt(cad.eng)+" mm", true, fmt(cad.eng))}
+  </div>`)}
+  ${notes("f3-notes",[
+    "Erro da impressora = desvio típico (±) das peças impressas. A folga real no flanco é g = k × erro. Como os flancos têm 30° da vertical, deslocar o perfil δ na radial dá só δ/2 de folga no flanco; por isso δ = 2g.",
+    "Aplique δ somente nas cotas marcadas “SIM”: Ø hélice (2), Ø furo (3), raio D1/2 (4) e raio d2/2 (5). P, H/2, P/8, 60° e o recuo (9) ficam nominais.",
+    "Se o engajamento ficar abaixo de 0,2 mm, aumente o passo (por exemplo P ≥ 1,5 mm) antes de aumentar a folga.",
+    "Valores práticos de projeto, não normativos (a ISO 965 não cobre impressão 3D). Imprima antes um trecho curto (3 a 4 voltas) e ajuste."
+  ])}
+  ${refImgs("f3-ref","femea-cotas.png","femea-3d-esquema.png","rosca interna")}`;
+}
+
+function tabMachoUs(r){
   const {m,u,is3d} = r;
   const selE = state.model==="max" ? "sel" : "", selI = state.model==="mid" ? "sel" : "";
   const R = (i, nom, tag, yes, E, F, G, H, I) => `<tr class="${yes?"yes":""}"><td class="idx">${i}</td><td class="desc">${ROW_DESC_M[i-1]}</td>${i===8?`<td class="num">60°</td>`:numTd(nom)}<td><span class="tag ${yes?"yes":""}">${tag}</span></td>${i===8?`<td class="num ${selE}">60°</td>`:numTd(E,selE)}${F==null?"<td></td>":numTd(F)}${G==null?"<td></td>":numTd(G)}${H==null?"<td></td>":numTd(H)}${i===8?`<td class="num ${selI}">60°</td>`:numTd(I,selI)}</tr>`;
@@ -1159,7 +1306,7 @@ function tabMacho(r){
   ${refImgs("mac-ref","macho-cotas.png","macho-usinagem-esquema.png","rosca externa")}`;
 }
 
-function tabFemea(r){
+function tabFemeaUs(r){
   const {m,u,cad,p3,is3d} = r, dl = cad.dl;
   const selE = state.model==="max" ? "sel" : "", selI = state.model==="mid" ? "sel" : "";
   const shifted = !eq(u.EI, 0);
@@ -1261,12 +1408,20 @@ function tabIso(r){
 function tabInfo(r){
   const {m,u,cad,is3d} = r;
   const mc = cad.mg;
-  const steps = [
-    "Escolha o processo no topo: <b>Usinagem</b> ou <b>Impressão 3D</b>.",
+  const steps = is3d ? [
+    "Escolha o processo no topo: <b>Impressão 3D</b>. Cada processo tem suas próprias configurações.",
+    "Informe o <b>Ø nominal</b> e o <b>passo</b> (os atalhos M… já usam o passo grosso).",
+    "O material é sempre <b>PLA</b>. Na impressão 3D não há classes ISO.",
+    "Escolha o <b>ajuste</b>: Folgado, Médio ou Justo. Ele define o fator k (1,5 · 1,25 · 1,0) que multiplica o erro da impressora.",
+    "Confira o <b>erro da impressora</b> (padrão 0,1 mm). A fêmea recebe δ = 2 × k × erro; o macho fica nominal.",
+    "Na aba <b>Resultados</b>, copie os parâmetros do macho e da fêmea para o CAD e veja se o engajamento dá <b>OK</b>.",
+    "Imprima um trecho curto (3 a 4 voltas) e troque o ajuste se ficar justo ou folgado demais."
+  ] : [
+    "Escolha o processo no topo: <b>Usinagem</b>. Cada processo tem suas próprias configurações.",
     "Informe o <b>Ø nominal</b> e o <b>passo</b> (os atalhos M… já usam o passo grosso).",
     "Escolha o <b>material</b>: Inox, Alumínio ou Latão. Ele define quanto de folga extra a rosca precisa.",
     "Escolha o <b>ajuste</b>: Folgado, Médio ou Justo. O site combina material + ajuste e escolhe as classes ISO (ex.: 6H/6g).",
-    is3d ? "Confira o <b>erro da impressora</b> (padrão 0,1 mm). A fêmea recebe δ = 2 × erro a mais." : "Escolha o modelo CAD: <b>matéria máxima</b> (garante a montagem) ou <b>meio da tolerância</b> (alvo de fabricação).",
+    "Escolha o modelo CAD: <b>matéria máxima</b> (garante a montagem) ou <b>meio da tolerância</b> (alvo de fabricação).",
     "Na aba <b>Resultados</b>, copie os parâmetros do macho e da fêmea para o CAD. O desenvolvimento dos cálculos fica logo abaixo.",
     "Só se precisar de algo específico, abra <b>Classes avançadas</b> no fim do painel para escolher posição e grau (e, f, g, h, G, H) ou um desvio personalizado."
   ];
@@ -1280,6 +1435,8 @@ function tabInfo(r){
     ["R (fêmea)","Raio do fundo da rosca interna (P/16, igual ao Ø P/8 da planilha)."],
     ["Passo","Distância axial entre dois filetes; também é o passo da hélice."],
   ].map(([k,v])=>`<div class="icard"><h4>${k}</h4><p>${v}</p></div>`).join("");
+  const matCards3d = `<div class="icard"><h4>PLA</h4><p>${PLA.why}</p></div>`
+    + Object.values(FITS3).map(F=>`<div class="icard em"><h4>${F.nome} · k = ${fmtIn(F.k)}</h4><p>${F.desc}</p></div>`).join("");
   const matCards = Object.values(MATS).map(M=>`<div class="icard"><h4>${M.nome} · ${posTxt(M.shift)}</h4><p>${M.why}</p></div>`).join("")
     + Object.values(FITS).map(F=>`<div class="icard em"><h4>${F.nome} · graus ${F.gF} (fêmea) / ${F.gM} (macho)</h4><p>${F.desc}</p></div>`).join("");
   const cotas = [
@@ -1306,18 +1463,27 @@ function tabInfo(r){
     ["es","Desvio superior do macho (negativo = folga)"],["EI","Desvio inferior da fêmea (positivo = folga)"],
     ["Td / Td2","Tolerância do Ø maior / médio do macho"],["TD1 / TD2","Tolerância do Ø menor / médio da fêmea"],
     ["grau","Número da classe: largura da tolerância"],["posição","Letra da classe: distância até o nominal"],
-    ["δ","Folga radial extra da fêmea no 3D = 2 × erro"],["R40","Série de números preferenciais para arredondar"]
+    ["δ","Folga radial da fêmea no 3D = 2 × k × erro"],["k","Fator do ajuste no 3D (1,0 · 1,25 · 1,5)"],["R40","Série de números preferenciais para arredondar"]
   ].map(([k,v])=>`<div><b>${k}</b><span>${v}</span></div>`).join("");
 
   return `<div class="callout"><b>Info.</b> Explica o resultado, os materiais e ajustes, e como modelar e interpretar o macho. Os valores mostrados seguem a rosca e o modo atuais.</div>
   ${fold("info-uso","Como usar","passo a passo",`<ol class="steps">${steps.map(s=>`<li>${s}</li>`).join("")}</ol>`)}
   ${fold("info-res","Desenho de resultados","o que cada indicação significa",`<div class="icards">${resItems}</div>`)}
-  ${fold("info-mat","Materiais e ajustes","como a escolha muda as folgas",`<div class="icards">${matCards}</div>
-    <p class="hint">Escada de folga: H/h → H/g → H/f → H/e → G/e. Folgado começa em H/f, Médio em H/g e Justo em H/h; o material sobe na escada. É uma recomendação de projeto (não normativa). Se a sua prática for outra, ajuste em Classes avançadas.</p>`)}
+  ${is3d
+    ? fold("info-mat3","Material e ajustes (impressão 3D)","como a escolha muda a folga",`<div class="icards">${matCards3d}</div>
+      <p class="hint">g = k × erro · δ = 2g. Com erro 0,1 mm: Justo δ = 0,20 · Médio δ = 0,25 · Folgado δ = 0,30 mm.</p>`)
+    : fold("info-mat","Materiais e ajustes (usinagem)","como a escolha muda as folgas",`<div class="icards">${matCards}</div>
+      <p class="hint">Escada de folga: H/h → H/g → H/f → H/e → G/e. Folgado começa em H/f, Médio em H/g e Justo em H/h; o material sobe na escada. É uma recomendação de projeto (não normativa). Se a sua prática for outra, ajuste em Classes avançadas.</p>`)}
   ${fold("info-sketch","Esboço do macho (cotas 1–9 das abas Macho/Fêmea)","valores do CAD "+modelName(),`<div class="plot">${machoSketch(r)}</div>
     <div class="tbl-wrap" style="margin-top:14px"><table>
       <thead><tr><th>Nº</th><th>Cota</th><th>O que significa</th><th class="r">Valor</th></tr></thead><tbody>${cotas}</tbody></table></div>`, false)}
-  ${fold("info-interp","Como interpretar o macho","classe ISO 965-1",`
+  ${is3d ? fold("info-interp3","Como interpretar o macho","impressão 3D",`<div class="icards">
+      <div class="icard em"><h4>O macho é o gabarito</h4><p>No 3D o macho fica <b>nominal</b>: d, d2, R e o perfil são os da norma. Toda a folga vai para a fêmea.</p></div>
+      <div class="icard"><h4>Como conferir a peça impressa</h4><p>Meça o <b>Ø eixo</b> com paquímetro e compare com ${fmt(m.d)} mm. A diferença mostra o erro real da sua impressora; use esse valor no campo “Erro”.</p></div>
+      <div class="icard"><h4>Se a rosca não entrar</h4><p>Passe para um ajuste mais <b>folgado</b>. Se o engajamento ficar abaixo de 0,2 mm, a solução é <b>aumentar o passo</b>, não a folga.</p></div>
+      <div class="icard"><h4>Se ficar folgada demais</h4><p>Passe para um ajuste mais <b>justo</b> ou diminua o erro. O jogo axial (2·δ·tan30°) mostra quanto a peça “anda” montada.</p></div>
+      <div class="icard"><h4>Orientação de impressão</h4><p>Com o eixo da rosca na vertical os flancos saem mais fiéis. Na horizontal o perfil distorce pelas camadas; prefira passos maiores (P ≥ 1,5).</p></div>
+    </div>`, false) : fold("info-interp","Como interpretar o macho","classe ISO 965-1",`
     <p class="hint" style="margin:0 0 10px">Classe atual do macho: <b>${esc(desigM())}</b></p>
     <div class="desig-break">${brk}</div>
     <div class="icards">
@@ -1326,7 +1492,6 @@ function tabInfo(r){
       <div class="icard"><h4>Matéria máxima × meio da tolerância</h4><p>Matéria máxima é o macho no limite “mais gordo”: se monta assim, monta sempre. Meio da tolerância é o alvo de fabricação.</p></div>
       <div class="icard"><h4>Mínimo e Máximo</h4><p>d2 entre <b>${fmt(u.mG6)}</b> e <b>${fmt(u.mH6)}</b> mm; d entre <b>${fmt(u.mG4)}</b> e <b>${fmt(u.mH4)}</b> mm. Fora disso a peça é rejeitada.</p></div>
       <div class="icard"><h4>Como inspecionar</h4><p><b>Anel calibrador</b> passa/não-passa da classe; <b>micrômetro de 3 arames</b> para o d2; micrômetro ou paquímetro para o d.</p></div>
-      <div class="icard"><h4>No 3D</h4><p>O macho segue o mesmo modelo da usinagem; a folga da impressora vai toda na fêmea. Meça o Ø eixo impresso: a diferença para o valor do resultado é o erro real da sua impressora.</p></div>
     </div>`, false)}
   ${fold("info-gloss","Glossário","símbolos usados no site",`<div class="gloss">${gloss}</div>`, false)}`;
 }
@@ -1353,36 +1518,50 @@ function syncInputs(r){
   });
   $("fEs").hidden = state.ms.pos!=="c";
   $("fEi").hidden = state.fs.pos!=="c";
-  $("btnReset").hidden = !state.custom;
   document.querySelectorAll("#modeSw button").forEach(b=>{ const on = b.dataset.mode===state.mode; b.classList.toggle("on",on); b.setAttribute("aria-selected",on); });
   document.querySelectorAll("[data-mode-only]").forEach(el=> el.hidden = el.dataset.modeOnly !== state.mode);
-  $("tabs").innerHTML = TABS.map(([k,l],i)=>`<button class="tab ${k===state.tab?"on":""} ${i===2?"sep":""}" data-t="${k}" role="tab" aria-selected="${k===state.tab}">${l}</button>`).join("");
+  $("tabs").innerHTML = tabsFor(state.mode).map(([k,l],i)=>`<button class="tab ${k===state.tab?"on":""} ${i===2?"sep":""}" data-t="${k}" role="tab" aria-selected="${k===state.tab}">${l}</button>`).join("");
   $("bRosca").textContent = `M${fmtIn(state.d)} × ${fmtIn(state.P)}`;
-  $("bMat").textContent = MATS[state.mat].nome;
-  $("bFit").textContent = state.custom ? "Personalizado" : FITS[state.fit].nome;
-  $("bAdv").textContent = desigFit();
-  $("matHint").textContent = MATS[state.mat].why;
-  $("fitHint").textContent = state.custom ? "Classes definidas manualmente em Classes avançadas." : FITS[state.fit].desc;
   const {u, cad, p3, is3d} = r;
-  $("bFolga").textContent = FIT[u.fitType].t.replace("Com ","");
-  $("fitBox").innerHTML = `
-    <div class="ln"><span>Classes</span><b>${esc(desigFit())}</b></div>
-    <div class="ln"><span>Tipo</span>${fitChip(u.fitType)}</div>
-    <div class="ln"><span>Folga mín. Ø médio</span><b>${sgn(u.fitMin)}${fmt(u.fitMin)} mm</b></div>
-    <div class="ln"><span>Folga máx. Ø médio</span><b>${sgn(u.fitMax)}${fmt(u.fitMax)} mm</b></div>
-    ${is3d?`<hr><div class="ln"><span>δ impressora (raio)</span><b>${fmt(p3.delta)} mm</b></div>
-    <div class="ln"><span>Folga mín. total</span><b>${sgn(cad.fitMin3d)}${fmt(cad.fitMin3d)} mm</b></div>
-    <div class="ln"><span>Engajamento</span>${engChip(cad)}</div>`:""}`;
+  $("btnReset").hidden = is3d || !state.custom;
+  if (is3d){
+    const F = FITS3[state.fit3];
+    $("bMat").textContent = "PLA";
+    $("bFit").textContent = F.nome;
+    $("matHint").textContent = PLA.why;
+    $("fitHint").textContent = F.desc;
+    $("bFolga").textContent = `δ ${fmt(p3.delta)}`;
+    $("fitBox").innerHTML = `
+      <div class="ln"><span>Fator k (ajuste)</span><b>${fmtIn(p3.k)}</b></div>
+      <div class="ln"><span>Folga no flanco g</span><b>${fmt(p3.g)} mm</b></div>
+      <div class="ln"><span>δ radial na fêmea</span><b>${fmt(p3.delta)} mm</b></div>
+      <div class="ln"><span>Jogo axial</span><b>${fmt(p3.axial)} mm</b></div>
+      <div class="ln"><span>Engajamento</span><b>${fmt(cad.eng)} mm</b></div>
+      <div class="ln"><span></span>${engChip(cad)}</div>`;
+  } else {
+    $("bMat").textContent = MATS[state.mat].nome;
+    $("bFit").textContent = state.custom ? "Personalizado" : FITS[state.fit].nome;
+    $("bAdv").textContent = desigFit();
+    $("matHint").textContent = MATS[state.mat].why;
+    $("fitHint").textContent = state.custom ? "Classes definidas manualmente em Classes avançadas." : FITS[state.fit].desc;
+    $("bFolga").textContent = FIT[u.fitType].t.replace("Com ","");
+    $("fitBox").innerHTML = `
+      <div class="ln"><span>Classes</span><b>${esc(desigFit())}</b></div>
+      <div class="ln"><span>Tipo</span>${fitChip(u.fitType)}</div>
+      <div class="ln"><span>Folga mín. Ø médio</span><b>${sgn(u.fitMin)}${fmt(u.fitMin)} mm</b></div>
+      <div class="ln"><span>Folga máx. Ø médio</span><b>${sgn(u.fitMax)}${fmt(u.fitMax)} mm</b></div>`;
+  }
 }
 
 function render(){
   syncClasses();
+  if (!tabsFor(state.mode).some(t=>t[0]===state.tab)) state.tab = "res";
   const r = calc(state);
-  $("desig").textContent = `M${fmtIn(state.d)} × ${fmtIn(state.P)} · ${desigFit()}`;
+  $("desig").textContent = `M${fmtIn(state.d)} × ${fmtIn(state.P)} · ` + (r.is3d ? `PLA · ${FITS3[state.fit3].nome}` : desigFit());
   const w = [];
   if (r.m.d1 <= 0 || r.m.D1 <= 0) w.push("Passo grande demais para este diâmetro (Ø menor ≤ 0).");
-  if (!r.u.row) w.push("Passo fora da tabela ISO 965-1: desvios e tolerâncias pelas fórmulas da norma.");
-  if (!r.u.faixa) w.push("Ø fora das faixas ISO 965-1 (d ≤ 0,99 mm).");
+  if (!r.is3d && !r.u.row) w.push("Passo fora da tabela ISO 965-1: desvios e tolerâncias pelas fórmulas da norma.");
+  if (!r.is3d && !r.u.faixa) w.push("Ø fora das faixas ISO 965-1 (d ≤ 0,99 mm).");
   $("geoWarn").innerHTML = w.join("<br>"); $("geoWarn").classList.toggle("show", w.length>0);
   syncInputs(r);
   if (r.m.d1 > 0 && r.m.D1 > 0) $("tabBody").innerHTML = TAB_FN[state.tab](r);
