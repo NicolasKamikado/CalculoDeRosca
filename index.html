@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cálculo de Roscas</title>
-<meta name="description" content="Cálculo de rosca métrica ISO para impressão 3D (folga pelo erro da impressora) e usinagem (ISO 965-1, classes de tolerância de macho e fêmea).">
+<meta name="description" content="Cálculo de rosca métrica ISO para usinagem (ISO 965-1) e impressão 3D: material, ajuste, folgas e parâmetros de CAD com desenho em tempo real.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231d1d1b'/%3E%3Cpath d='M4 20l4-8 4 8 4-8 4 8 4-8 4 8' fill='none' stroke='%23e4032e' stroke-width='2.6' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -65,7 +65,6 @@ h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.01em}
 .top .spacer{flex:1}
 .mode{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
 .mode button{border:0;background:transparent;padding:7px 16px;border-radius:9px;cursor:pointer;font-weight:500;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px;white-space:nowrap}
-.mode button svg{opacity:.8}
 .mode button.on{background:var(--rzk-grafite);color:#fff}
 :root[data-theme="dark"] .mode button.on{background:var(--accent)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .mode button.on{background:var(--accent)}}
@@ -74,19 +73,18 @@ h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.01em}
 .icon-btn:hover{border-color:var(--line-strong)}
 
 /* ---------- Layout ---------- */
-.app{max-width:1480px;margin:0 auto;padding:24px;display:grid;grid-template-columns:330px minmax(0,1fr);gap:24px;align-items:start}
+.app{max-width:1480px;margin:0 auto;padding:24px;display:grid;grid-template-columns:320px minmax(0,1fr);gap:24px;align-items:start}
 aside.panel{position:sticky;top:86px;max-height:calc(100vh - 110px);overflow:auto;scrollbar-width:thin}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
 .panel .card{padding:6px 18px}
 
-/* grupos recolhíveis (details) */
 details.group{border-bottom:1px solid var(--line)}
 details.group:last-child{border-bottom:0}
 details.group>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:14px 0;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);user-select:none}
 details.group>summary::-webkit-details-marker{display:none}
 details.group>summary::before{content:"";width:6px;height:6px;border-radius:2px;background:var(--accent);flex:none}
+details.group.adv>summary::before{background:var(--line-strong)}
 details.group>summary .badge{margin-left:auto;text-transform:none;letter-spacing:0;font-family:"JetBrains Mono",monospace;font-weight:500;font-size:11.5px;color:var(--text-2)}
-details.group>summary .chev{margin-left:8px}
 details.group>summary .badge+.chev{margin-left:6px}
 details.group>summary:not(:has(.badge)) .chev{margin-left:auto}
 .chev{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;flex:none;color:var(--muted);transition:transform .18s,background .15s}
@@ -101,7 +99,7 @@ details:not([open])>summary .chev{transform:rotate(-90deg)}
 .field label small,.flabel small{color:var(--muted);font-weight:400}
 .inp{display:flex;align-items:center;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;transition:border-color .15s,box-shadow .15s}
 .inp:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-.inp input{flex:1;min-width:0;width:100%;border:0;background:transparent;padding:9px 12px;font-family:"JetBrains Mono",monospace;font-size:14px;outline:none}
+.inp input{flex:1;min-width:0;width:100%;border:0;background:transparent;padding:9px 12px;font-family:"JetBrains Mono",monospace;font-size:15px;outline:none}
 .inp .unit{padding:0 12px;color:var(--muted);font-size:12px}
 .inp input::-webkit-outer-spin-button,.inp input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .inp input[type=number]{-moz-appearance:textfield}
@@ -114,65 +112,49 @@ details:not([open])>summary .chev{transform:rotate(-90deg)}
 .chip.on{background:var(--text);color:var(--surface);border-color:var(--text)}
 .chip-group{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600;width:100%;margin-top:4px}
 
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:var(--line);margin:12px 0 2px;outline:none}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--accent);cursor:pointer}
-input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--accent);cursor:pointer}
-
 .seg{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
 .seg button{flex:1;border:0;background:transparent;padding:6px 0;border-radius:7px;cursor:pointer;font-family:"JetBrains Mono",monospace;font-weight:500;color:var(--muted);min-width:0}
 .seg button:hover{color:var(--text)}
 .seg button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .seg.text button{font-family:Poppins,sans-serif;font-size:12.5px}
+.seg.big button{padding:9px 0;font-size:13px}
+.seg.big button.on{background:var(--accent);color:#fff;box-shadow:none}
 .hint{font-size:12px;color:var(--muted);margin-top:6px}
-.sub-h{font-size:12px;font-weight:600;color:var(--text);margin:4px 0 10px;display:flex;align-items:center;gap:8px}
-.sub-h .sw{width:14px;height:9px}
-.fit-box{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface-2);display:grid;gap:6px;font-size:12.5px}
-.fit-box .ln{display:flex;justify-content:space-between;gap:10px;color:var(--text-2)}
-.fit-box .ln b{font-family:"JetBrains Mono",monospace;font-weight:500;color:var(--text)}
+.sub-h{font-size:12px;font-weight:600;color:var(--text);margin:4px 0 10px}
+.fit-box{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface-2);display:grid;gap:7px;font-size:12.5px}
+.fit-box .ln{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--text-2)}
+.fit-box .ln b{font-family:"JetBrains Mono",monospace;font-weight:500;color:var(--text);white-space:nowrap}
+.fit-box hr{border:0;border-top:1px solid var(--line);margin:2px 0;width:100%}
+.btn-link{border:1px solid var(--accent-line);background:var(--accent-soft);color:var(--accent-strong);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;margin-top:10px}
 
 /* ---------- Main ---------- */
 main{min-width:0;display:flex;flex-direction:column;gap:24px}
-details.vis>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:18px 20px}
-details.vis>summary::-webkit-details-marker{display:none}
-details.vis>summary h2{font-size:16px}
-details.vis>summary .sub{color:var(--muted);font-size:12.5px}
-details.vis>summary .chev{margin-left:auto}
-details.vis[open]>summary{padding-bottom:12px}
-.vis-body{padding:0 20px 18px}
-.scen-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px}
-.scen{display:flex;flex-wrap:wrap;gap:6px}
-.scen button{border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:6px 10px;cursor:pointer;font-size:12px;text-align:left;line-height:1.25;color:var(--text-2);display:flex;align-items:center;gap:8px}
-.scen button:hover{border-color:var(--line-strong)}
-.scen button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--text)}
-.scen button b{font-family:"JetBrains Mono",monospace;font-weight:500}
-.scen .dot{width:8px;height:8px;border-radius:50%;flex:none}
-.scen-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-right:2px}
-
 .plot{background:var(--plot-bg);border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative}
 .plot svg{display:block;width:100%;height:auto}
-.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px;font-size:12px;color:var(--text-2)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:12px;color:var(--text-2)}
 .legend span{display:inline-flex;align-items:center;gap:7px}
 .sw{width:18px;height:10px;border-radius:3px;display:inline-block;flex:none}
 .sw.m{background:var(--macho-fill);border:1.5px solid var(--macho-stroke)}
 .sw.f{background:var(--femea-fill);border:1.5px solid var(--femea-stroke)}
-.sw.g{border:1.5px dashed var(--ghost);background:transparent}
 .sw.i{background:var(--accent);border:1.5px solid var(--accent)}
 .sw.p{height:0;border-top:1.5px dashed var(--muted);border-radius:0;width:18px}
 
-.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
-.stat{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
-.stat .k{font-size:11.5px;color:var(--muted);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stat .v{font-family:"JetBrains Mono",monospace;font-size:20px;font-weight:500;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stat .v small{font-size:12px;color:var(--muted);margin-left:3px;font-weight:400}
-.stat .s{font-size:11.5px;color:var(--muted);margin-top:2px}
-
-details.over{margin-top:16px}
-details.over>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;margin-bottom:8px}
-details.over>summary::-webkit-details-marker{display:none}
-details.over>summary h3{font-size:13px}
-details.over>summary span{font-size:12px;color:var(--muted)}
-details.over>summary .chev{margin-left:auto}
-details.over:not([open])>summary{margin-bottom:0}
+.res-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-bottom:14px}
+.res-head .big{font-family:"JetBrains Mono",monospace;font-size:20px;font-weight:500;letter-spacing:-.02em}
+.res-head .spacer{flex:1}
+.res-head .seg{min-width:280px}
+.pcards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.pcard{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.pcard h4{margin:0;padding:11px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.pcard h4 small{margin-left:auto;font-weight:400;color:var(--muted);font-size:11.5px}
+.prow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 14px;border-bottom:1px solid var(--line);cursor:copy}
+.prow:last-child{border-bottom:0}
+.prow:hover{background:var(--surface-2)}
+.prow .l{font-size:12.5px;color:var(--text-2)}
+.prow .l small{display:block;color:var(--muted);font-size:11px}
+.prow .v{font-family:"JetBrains Mono",monospace;font-size:15px;white-space:nowrap}
+.prow .v small{font-size:11px;color:var(--muted);margin-left:3px}
+.prow.key .v{color:var(--accent-strong);font-weight:500}
 
 /* ---------- Status ---------- */
 .st{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;border:1px solid}
@@ -189,13 +171,13 @@ details.over:not([open])>summary{margin-bottom:0}
 .tab:hover{color:var(--text)}
 .tab.on{color:var(--text);background:var(--surface)}
 .tab.on::after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:2px;background:var(--accent);border-radius:2px}
+.tab.sep{margin-left:10px}
 .tab-body{padding:22px}
 .sec-title{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:26px 0 12px}
 .sec-title:first-child{margin-top:0}
 .sec-title h3{font-size:14px}
 .sec-title span{color:var(--muted);font-size:12px}
 
-/* seções recolhíveis dentro das abas */
 details.fold{margin-top:22px}
 details.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px;user-select:none}
 details.fold>summary::-webkit-details-marker{display:none}
@@ -204,6 +186,9 @@ details.fold>summary span.d{color:var(--muted);font-size:12px}
 details.fold>summary .chev{margin-left:auto;align-self:center}
 details.fold:not([open])>summary{margin-bottom:0}
 details.fold:not([open]){padding-bottom:14px;border-bottom:1px solid var(--line)}
+.dev-h{display:flex;align-items:center;gap:10px;margin:30px 0 4px;padding-top:22px;border-top:1px dashed var(--line-strong)}
+.dev-h h2{font-size:15px}
+.dev-h span{font-size:12px;color:var(--muted)}
 
 /* ---------- Tables ---------- */
 .tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
@@ -212,10 +197,11 @@ th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);vert
 tr:last-child td{border-bottom:0}
 th{font-size:11.5px;font-weight:600;color:var(--muted);background:var(--surface-2);white-space:nowrap;letter-spacing:.02em}
 th.r,td.r{text-align:right}
+th.c,td.c{text-align:center}
 td.num{text-align:right;white-space:nowrap;cursor:copy;font-size:13px}
 td.num:hover{color:var(--accent-strong)}
 td.idx{width:44px;color:var(--muted);font-family:"JetBrains Mono",monospace}
-td.desc{min-width:220px}
+td.desc{min-width:200px}
 tr.yes td{background:var(--accent-soft)}
 tr.yes td.idx{color:var(--accent-strong);font-weight:600}
 th.sel,td.sel{box-shadow:inset 0 0 0 9999px color-mix(in srgb,var(--accent) 7%,transparent)}
@@ -226,12 +212,14 @@ th.clickable:hover{color:var(--text)}
 .tag.yes{border-color:var(--accent-line);color:var(--accent-strong);background:var(--surface)}
 tr.hl td{background:var(--accent-soft)}
 td.hl{color:var(--accent-strong);font-weight:600}
+td.cur{outline:2px solid var(--accent);outline-offset:-2px;background:var(--accent-soft);font-weight:600}
 .muted{color:var(--muted)}
 
 .kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
 .kv.one{grid-template-columns:1fr}
-.kv .it{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+.kv .it{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
 .kv .it .l{font-size:12.5px;color:var(--text-2)}
+.kv .it .l small{display:block;color:var(--muted);font-size:11.5px}
 .kv .it .v{font-family:"JetBrains Mono",monospace;font-size:13px;white-space:nowrap;cursor:copy;text-align:right}
 .kv .it .v:hover{color:var(--accent-strong)}
 .kv .it.em{border-color:var(--accent-line);background:var(--accent-soft)}
@@ -254,19 +242,12 @@ td.hl{color:var(--accent-strong);font-weight:600}
 .notes li::before{counter-increment:n;content:counter(n);position:absolute;left:0;top:1px;width:20px;height:20px;border-radius:6px;background:var(--surface-2);border:1px solid var(--line);font-size:11px;display:grid;place-items:center;font-family:"JetBrains Mono",monospace;color:var(--muted)}
 .ref-imgs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .ref-imgs img{width:100%;border-radius:8px;border:1px solid var(--line);background:#fff;display:block}
-
 .r40{display:flex;flex-wrap:wrap;gap:5px}
 .r40 span{font-family:"JetBrains Mono",monospace;font-size:11.5px;padding:2px 7px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}
 .r40 span.hl{border-color:var(--accent);color:var(--accent-strong);background:var(--accent-soft)}
-.grid2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px;align-items:start}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
 .grid2>div>details.fold:first-child{margin-top:22px}
-
-.warnbar{display:none;margin:0 0 14px;padding:8px 12px;border-radius:10px;font-size:12.5px;background:var(--accent-soft);color:var(--accent-strong);border:1px solid var(--accent-line)}
-.warnbar.show{display:block}
-
-.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;background:var(--text);color:var(--surface);padding:9px 16px;border-radius:999px;font-size:13px;pointer-events:none;transition:all .2s;z-index:50;font-family:"JetBrains Mono",monospace}
-.toast.show{opacity:1;transform:translate(-50%,0)}
-footer{max-width:1480px;margin:0 auto;padding:8px 24px 40px;color:var(--muted);font-size:12px}
+.formula{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--muted)}
 
 /* aba Info */
 .steps{counter-reset:s;list-style:none;margin:0;padding:0;display:grid;gap:10px}
@@ -282,21 +263,28 @@ footer{max-width:1480px;margin:0 auto;padding:8px 24px 40px;color:var(--muted);f
 .icard.em{border-color:var(--accent-line);background:var(--accent-soft)}
 .gloss{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
 .gloss div{display:flex;gap:10px;font-size:12.5px;color:var(--text-2);padding:8px 12px;border:1px solid var(--line);border-radius:10px;align-items:baseline}
-.gloss b{font-family:"JetBrains Mono",monospace;font-weight:500;color:var(--text);min-width:48px;flex:none}
+.gloss b{font-family:"JetBrains Mono",monospace;font-weight:500;color:var(--text);min-width:56px;flex:none}
 .desig-break{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
 .desig-break .part{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--surface-2)}
-.desig-break .big{font-family:"JetBrains Mono",monospace;font-size:24px;font-weight:500;color:var(--accent-strong);line-height:1}
 .desig-break .part span{font-size:12px;color:var(--text-2);line-height:1.35}
-.desig-break .part span.big{font-size:26px;color:var(--accent-strong);line-height:1;min-width:24px;text-align:center}
-td.why{font-size:12.5px;color:var(--text-2);min-width:240px}
+.desig-break .part span.big{font-family:"JetBrains Mono",monospace;font-size:26px;font-weight:500;color:var(--accent-strong);line-height:1;min-width:24px;text-align:center}
+td.why{font-size:12.5px;color:var(--text-2);min-width:220px}
+
+.warnbar{display:none;margin:0 0 14px;padding:8px 12px;border-radius:10px;font-size:12.5px;background:var(--accent-soft);color:var(--accent-strong);border:1px solid var(--accent-line)}
+.warnbar.show{display:block}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;background:var(--text);color:var(--surface);padding:9px 16px;border-radius:999px;font-size:13px;pointer-events:none;transition:all .2s;z-index:50;font-family:"JetBrains Mono",monospace}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+footer{max-width:1480px;margin:0 auto;padding:8px 24px 40px;color:var(--muted);font-size:12px}
+
 .svg-t{font-family:"JetBrains Mono",monospace;font-size:13px;fill:var(--text-2)}
 .svg-t.s{font-size:11.5px;fill:var(--muted)}
+.svg-t.v{font-size:15px;font-weight:500;fill:var(--text)}
+.svg-t.cap{font-family:Poppins,sans-serif;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
 
 @media (max-width:1100px){
   .app{grid-template-columns:1fr}
   aside.panel{position:static;max-height:none}
-  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .grid2{grid-template-columns:1fr}
+  .grid2,.pcards{grid-template-columns:1fr}
 }
 @media (max-width:640px){
   .top-in{padding:10px 16px;gap:10px}
@@ -305,10 +293,8 @@ td.why{font-size:12.5px;color:var(--text-2);min-width:240px}
   .mode button{flex:1;justify-content:center}
   .app{padding:16px;gap:16px}
   .tab-body{padding:16px}
-  details.vis>summary{padding:14px}
-  .vis-body{padding:0 14px 14px}
   .ref-imgs{grid-template-columns:1fr}
-  .stat .v{font-size:17px}
+  .res-head .seg{min-width:0;width:100%}
 }
 </style>
 </head>
@@ -321,12 +307,12 @@ td.why{font-size:12.5px;color:var(--text-2);min-width:240px}
     </div>
     <div class="brand">
       <h1>Cálculo de Roscas</h1>
-      <p>Rosca métrica ISO · impressão 3D e usinagem (ISO 965-1)</p>
+      <p>Rosca métrica ISO · usinagem (ISO 965-1) e impressão 3D</p>
     </div>
     <div class="spacer"></div>
     <div class="mode" id="modeSw" role="tablist" aria-label="Processo">
-      <button data-mode="3d"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>Impressão 3D</button>
       <button data-mode="us"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>Usinagem</button>
+      <button data-mode="3d"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>Impressão 3D</button>
     </div>
     <div class="desig" id="desig">M15 × 0,75</div>
     <button class="icon-btn" id="themeBtn" title="Alternar tema" aria-label="Alternar tema">
@@ -343,43 +329,54 @@ td.why{font-size:12.5px;color:var(--text-2);min-width:240px}
         <summary>Rosca<span class="badge" id="bRosca"></span><span class="chev"></span></summary>
         <div class="group-b">
           <div class="field">
-            <label for="inP">Passo P <small>mm</small></label>
-            <div class="inp"><input id="inP" data-num="P" type="number" step="0.05" min="0.05" inputmode="decimal"><span class="unit">mm</span></div>
-            <div class="chips" id="chipsP"></div>
+            <label for="inD">Ø nominal da rosca <small>mm</small></label>
+            <div class="inp"><input id="inD" data-num="d" type="number" step="0.5" min="0.5" inputmode="decimal"><span class="unit">mm</span></div>
+            <div class="chips" id="chipsD"></div>
+            <div class="hint">Os atalhos M… já aplicam o passo grosso.</div>
           </div>
           <div class="field">
-            <label for="inD">Ø nominal d <small>mm</small></label>
-            <div class="inp"><input id="inD" data-num="d" type="number" step="0.5" min="0.5" inputmode="decimal"><span class="unit">mm</span></div>
-            <input type="range" id="rgD" min="1" max="64" step="0.5" aria-label="Ø nominal">
-            <div class="chips" id="chipsD"></div>
+            <label for="inP">Passo <small>mm</small></label>
+            <div class="inp"><input id="inP" data-num="P" type="number" step="0.05" min="0.05" inputmode="decimal"><span class="unit">mm</span></div>
+            <div class="chips" id="chipsP"></div>
           </div>
           <div class="warnbar" id="geoWarn"></div>
         </div>
       </details>
 
-      <!-- ---------- IMPRESSÃO 3D ---------- -->
-      <details class="group" data-fold="g-3d" data-mode-only="3d" open>
-        <summary>Erro da impressora<span class="chev"></span></summary>
+      <details class="group" data-fold="g-mat" open>
+        <summary>Material<span class="badge" id="bMat"></span><span class="chev"></span></summary>
         <div class="group-b">
-          <div class="row2">
-            <div class="field"><label for="inE1">Erro 1</label>
-              <div class="inp"><input id="inE1" data-num="e1" type="number" step="0.01" min="0" inputmode="decimal"><span class="unit">mm</span></div></div>
-            <div class="field"><label for="inE2">Erro 2</label>
-              <div class="inp"><input id="inE2" data-num="e2" type="number" step="0.01" min="0" inputmode="decimal"><span class="unit">mm</span></div></div>
-            <div class="field"><label for="inK1">Fator k mín.</label>
-              <div class="inp"><input id="inK1" data-num="k1" type="number" step="0.1" min="0" inputmode="decimal"></div></div>
-            <div class="field"><label for="inK2">Fator k máx.</label>
-              <div class="inp"><input id="inK2" data-num="k2" type="number" step="0.1" min="0" inputmode="decimal"></div></div>
-          </div>
-          <div class="hint">Folga no flanco g = k × erro · δ radial = 2g</div>
+          <div class="seg text big" data-key="mat"><button data-v="inox">Inox</button><button data-v="al">Alumínio</button><button data-v="latao">Latão</button></div>
+          <div class="hint" id="matHint"></div>
         </div>
       </details>
 
-      <!-- ---------- USINAGEM ---------- -->
-      <details class="group" data-fold="g-macho" data-mode-only="us" open>
-        <summary>Classe do macho<span class="badge" id="bMacho"></span><span class="chev"></span></summary>
+      <details class="group" data-fold="g-fit" open>
+        <summary>Ajuste<span class="badge" id="bFit"></span><span class="chev"></span></summary>
         <div class="group-b">
-          <div class="chips" id="presetM" style="margin:0 0 14px"></div>
+          <div class="seg text big" data-key="fit"><button data-v="folgado">Folgado</button><button data-v="medio">Médio</button><button data-v="justo">Justo</button></div>
+          <div class="hint" id="fitHint"></div>
+          <button class="btn-link" id="btnReset" hidden>Classes alteradas manualmente · voltar ao ajuste sugerido</button>
+        </div>
+      </details>
+
+      <details class="group" data-fold="g-folga" open>
+        <summary>Folgas<span class="badge" id="bFolga"></span><span class="chev"></span></summary>
+        <div class="group-b">
+          <div class="field" data-mode-only="3d">
+            <label for="inErr">Erro da impressora <small>mm</small></label>
+            <div class="inp"><input id="inErr" data-num="err" type="number" step="0.01" min="0" inputmode="decimal"><span class="unit">mm</span></div>
+            <div class="hint">Folga extra na fêmea: δ = 2 × erro (radial).</div>
+          </div>
+          <div class="fit-box" id="fitBox"></div>
+        </div>
+      </details>
+
+      <details class="group adv" data-fold="g-adv">
+        <summary>Classes avançadas (e f g h…)<span class="badge" id="bAdv"></span><span class="chev"></span></summary>
+        <div class="group-b">
+          <div class="sub-h">Macho</div>
+          <div class="chips" id="presetM" data-which="ms" style="margin:0 0 12px"></div>
           <div class="field">
             <div class="flabel">Posição (desvio es)</div>
             <div class="seg" data-key="ms.pos"><button data-v="e">e</button><button data-v="f">f</button><button data-v="g">g</button><button data-v="h">h</button><button data-v="c" title="Desvio personalizado">pers.</button></div>
@@ -388,21 +385,14 @@ td.why{font-size:12.5px;color:var(--text-2);min-width:240px}
             <label for="inEs">es personalizado <small>µm · positivo = interferência</small></label>
             <div class="inp"><input id="inEs" data-num="ms.es" data-neg="1" type="number" step="1" inputmode="numeric"><span class="unit">µm</span></div>
           </div>
-          <div class="field">
-            <div class="flabel">Grau do Ø médio d2 <small>Td2</small></div>
-            <div class="seg" data-key="ms.g2"><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button><button data-v="8">8</button><button data-v="9">9</button></div>
+          <div class="row2">
+            <div class="field"><div class="flabel">Grau d2</div>
+              <div class="seg" data-key="ms.g2"><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button><button data-v="8">8</button><button data-v="9">9</button></div></div>
+            <div class="field"><div class="flabel">Grau d</div>
+              <div class="seg" data-key="ms.gd"><button data-v="4">4</button><button data-v="6">6</button><button data-v="8">8</button></div></div>
           </div>
-          <div class="field">
-            <div class="flabel">Grau do Ø maior d <small>Td</small></div>
-            <div class="seg" data-key="ms.gd"><button data-v="4">4</button><button data-v="6">6</button><button data-v="8">8</button></div>
-          </div>
-        </div>
-      </details>
-
-      <details class="group" data-fold="g-femea" data-mode-only="us" open>
-        <summary>Classe da fêmea<span class="badge" id="bFemea"></span><span class="chev"></span></summary>
-        <div class="group-b">
-          <div class="chips" id="presetF" style="margin:0 0 14px"></div>
+          <div class="sub-h" style="margin-top:18px">Fêmea</div>
+          <div class="chips" id="presetF" data-which="fs" style="margin:0 0 12px"></div>
           <div class="field">
             <div class="flabel">Posição (desvio EI)</div>
             <div class="seg" data-key="fs.pos"><button data-v="G">G</button><button data-v="H">H</button><button data-v="c" title="Desvio personalizado">pers.</button></div>
@@ -411,23 +401,17 @@ td.why{font-size:12.5px;color:var(--text-2);min-width:240px}
             <label for="inEi">EI personalizado <small>µm · negativo = interferência</small></label>
             <div class="inp"><input id="inEi" data-num="fs.ei" data-neg="1" type="number" step="1" inputmode="numeric"><span class="unit">µm</span></div>
           </div>
-          <div class="field">
-            <div class="flabel">Grau do Ø médio D2 <small>TD2</small></div>
-            <div class="seg" data-key="fs.g2"><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button><button data-v="8">8</button></div>
+          <div class="row2">
+            <div class="field"><div class="flabel">Grau D2</div>
+              <div class="seg" data-key="fs.g2"><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button><button data-v="8">8</button></div></div>
+            <div class="field"><div class="flabel">Grau D1</div>
+              <div class="seg" data-key="fs.g1"><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button><button data-v="8">8</button></div></div>
           </div>
-          <div class="field">
-            <div class="flabel">Grau do Ø menor D1 <small>TD1</small></div>
-            <div class="seg" data-key="fs.g1"><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button><button data-v="8">8</button></div>
-          </div>
+          <div class="hint">Alterar qualquer classe aqui muda o ajuste para “personalizado”.</div>
         </div>
       </details>
 
-      <details class="group" data-fold="g-fit" data-mode-only="us" open>
-        <summary>Ajuste resultante<span class="badge" id="bFit"></span><span class="chev"></span></summary>
-        <div class="group-b"><div class="fit-box" id="fitBox"></div></div>
-      </details>
-
-      <details class="group" data-fold="g-exib">
+      <details class="group adv" data-fold="g-exib">
         <summary>Exibição<span class="chev"></span></summary>
         <div class="group-b">
           <div class="field">
@@ -446,29 +430,6 @@ td.why{font-size:12.5px;color:var(--text-2);min-width:240px}
 
   <!-- ================= CONTEÚDO ================= -->
   <main>
-    <details class="card vis" data-fold="vis" open>
-      <summary>
-        <div>
-          <h2>Perfil da rosca em tempo real</h2>
-          <div class="sub" id="visSub">Corte axial · escala real</div>
-        </div>
-        <span class="chev" title="Minimizar"></span>
-      </summary>
-      <div class="vis-body">
-        <div class="scen-row">
-          <span class="scen-label" id="scenLabel">Cenário</span>
-          <div class="scen" id="scen"></div>
-        </div>
-        <div class="plot" id="plotProfile"></div>
-        <div class="legend" id="legend"></div>
-        <div class="stats" id="stats"></div>
-        <details class="over" data-fold="over" open>
-          <summary><h3>Vista geral</h3><span id="overSub"></span><span class="chev"></span></summary>
-          <div class="plot" id="plotOver"></div>
-        </details>
-      </div>
-    </details>
-
     <section class="card tabs-card">
       <nav class="tabs" id="tabs" role="tablist"></nav>
       <div class="tab-body" id="tabBody"></div>
@@ -476,13 +437,13 @@ td.why{font-size:12.5px;color:var(--text-2);min-width:240px}
   </main>
 </div>
 
-<footer>Valores práticos de projeto. Dados ISO 965-1 conforme a planilha original (fonte: tabelas publicadas em machiningdoctor.com); graus diferentes de 6 calculados pelos fatores da ISO 965-1 com arredondamento R40. Confira na norma para tolerâncias críticas.</footer>
+<footer>Valores práticos de projeto. Dados ISO 965-1 conforme a planilha original (tabelas publicadas em machiningdoctor.com); graus diferentes de 6 e passos fora da tabela pelas fórmulas da ISO 965-1 com arredondamento R40. A relação material × ajuste é uma recomendação de projeto, não normativa. Confira na norma para tolerâncias críticas.</footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* =====================================================================
-   DADOS ISO 965-1 (µm) — aba "ISO965" da planilha
+   DADOS ISO 965-1 (µm)
    ===================================================================== */
 const ISO_P = [ // [P, es g (= EI G), es f, es e, Td(6), TD1(6)]
   [0.25,18,null,null,67,null],[0.3,18,null,null,75,85],[0.35,19,34,null,85,100],[0.4,19,34,null,95,112],
@@ -505,32 +466,53 @@ const TD2_TAB = [ // [faixa nº, P, Td2(6), TD2(6)]
   [7,1.5,160,212],[7,2,180,236],[7,3,212,280],[7,4,236,315],[7,5,250,335],[7,5.5,265,355],[7,6,280,375]
 ];
 const CLS_COL = {g:1,f:2,e:3};
-/* Fatores de grau da ISO 965-1 */
-const F_TD2E = {3:0.5,4:0.63,5:0.8,6:1,7:1.25,8:1.6,9:2};     // Td2(n) = k · Td2(6)
-const F_TDE  = {4:0.63,6:1,8:1.6};                            // Td(n)  = k · Td(6)
-const F_TD2I = {4:0.85,5:1.06,6:1.32,7:1.7,8:2.12};           // TD2(n) = k · Td2(6)
-const F_TD1  = {4:0.63,5:0.8,6:1,7:1.25,8:1.6};               // TD1(n) = k · TD1(6)
+const ES_BASE = {g:15,f:30,e:50};                              // es = −(base + 11·P) µm (fórmula ISO 965-1)
+const F_TD2E = {3:0.5,4:0.63,5:0.8,6:1,7:1.25,8:1.6,9:2};
+const F_TDE  = {4:0.63,6:1,8:1.6};
+const F_TD2I = {4:0.85,5:1.06,6:1.32,7:1.7,8:2.12};
+const F_TD1  = {4:0.63,5:0.8,6:1,7:1.25,8:1.6};
 const PRESET_M = [["Fino",["3h4h","4h","4g","5h4h"]],["Médio",["5g6g","5h6h","6h","6g","6f","6e"]],["Grosso",["7h6h","7g6g","7e6e","8g","9g8g"]]];
 const PRESET_F = [["Fino",["4H","5H","4H5H"]],["Médio",["5G","6G","6H","5H6H"]],["Grosso",["7G","7H","8H"]]];
+/* Atalhos: série grossa ISO 261 */
+const COARSE = [[3,0.5],[4,0.7],[5,0.8],[6,1],[8,1.25],[10,1.5],[12,1.75],[14,2],[16,2],[20,2.5],[24,3]];
 const PITCH_CHIPS = [0.5,0.7,0.75,0.8,1,1.25,1.5,1.75,2,2.5,3];
-const D_CHIPS = [3,4,5,6,8,10,12,15,16,20,24];
 const TAN30 = Math.tan(Math.PI/6);
-const TABS3 = [["metrica","Métrica"],["m3d","Macho 3D"],["f3d","Fêmea 3D"],["info","Info"]];
-const TABSU = [["metrica","Métrica"],["mus","Macho usinagem"],["fus","Fêmea usinagem"],["iso","Tabela ISO 965"],["info","Info"]];
-const CHEV = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5L6 8l3.5-3.5"/></svg>';
+const S3 = Math.sqrt(3);
+
+/* ---------- Material × Ajuste ----------
+   Escada de posições (da mais justa para a mais folgada): H/h → H/g → H/f → H/e → G/e.
+   O ajuste define o ponto de partida e os graus; o material desloca a posição para mais folga. */
+const LADDER = [["H","h"],["H","g"],["H","f"],["H","e"],["G","e"]];
+const FITS = {
+  folgado:{nome:"Folgado", base:2, gF:7, gM:8, gd:8, desc:"Montagem fácil e rápida; tolera sujeira, rebarba e revestimento."},
+  medio:  {nome:"Médio",   base:1, gF:6, gM:6, gd:6, desc:"Uso geral. Equivale ao padrão 6H/6g no latão."},
+  justo:  {nome:"Justo",   base:0, gF:5, gM:4, gd:4, desc:"Precisão: pouco jogo radial e axial; exige usinagem cuidadosa."}
+};
+const MATS = {
+  inox: {nome:"Inox",     shift:2, why:"Alto risco de engripamento (galling) entre filetes de inox: +2 posições de folga. Use antiengripante."},
+  al:   {nome:"Alumínio", shift:1, why:"Macio e com tendência a engripar e arrancar filete: +1 posição de folga."},
+  latao:{nome:"Latão",    shift:0, why:"Usina bem e quase não engripa: usa a classe base do ajuste."}
+};
+function suggested(mat, fit){
+  const F = FITS[fit], M = MATS[mat];
+  const idx = Math.min(F.base + M.shift, LADDER.length-1);
+  const [pf, pm] = LADDER[idx];
+  return {fs:{pos:pf, g2:F.gF, g1:F.gF}, ms:{pos:pm, g2:F.gM, gd:F.gd}, idx};
+}
 
 /* =====================================================================
    ESTADO
    ===================================================================== */
 const DEFAULTS = {
-  mode:"3d", P:0.75, d:15, e1:0.1, e2:0.2, k1:1, k2:1.5,
+  mode:"us", P:0.75, d:15, err:0.1, mat:"latao", fit:"medio", custom:false,
   ms:{pos:"g", g2:6, gd:6, es:20}, fs:{pos:"H", g2:6, g1:6, ei:0},
-  v3:"p0", vu:"u-max", tab3:"f3d", tabU:"mus", dec:3, sep:",", col:{}
+  model:"max", tab:"res", dec:3, sep:",", col:{}
 };
 const state = JSON.parse(JSON.stringify(DEFAULTS));
+const TABS = [["res","Resultados"],["info","Info"],["metrica","Métrica"],["macho","Macho"],["femea","Fêmea"],["iso","Tabela ISO 965"]];
 (function load(){
   try{
-    const s = JSON.parse(localStorage.getItem("rosca-state-v2")||"{}");
+    const s = JSON.parse(localStorage.getItem("rosca-state-v3")||"{}");
     for (const k in s){
       if (k==="ms"||k==="fs"||k==="col") Object.assign(state[k], s[k]); else if (k in state) state[k] = s[k];
     }
@@ -539,18 +521,23 @@ const state = JSON.parse(JSON.stringify(DEFAULTS));
     const q = new URLSearchParams(location.search);
     const num = k => { const v = parseFloat(q.get(k)); return isFinite(v) ? v : undefined; };
     const setN = (obj,k,qk) => { const v = num(qk); if (v!==undefined) obj[k] = v; };
-    setN(state,"P","p"); setN(state,"d","d"); setN(state,"e1","e1"); setN(state,"e2","e2"); setN(state,"k1","k1"); setN(state,"k2","k2");
+    setN(state,"P","p"); setN(state,"d","d"); setN(state,"err","err");
     if (["3d","us"].includes(q.get("m"))) state.mode = q.get("m");
-    if (q.get("mc")) applyPreset("ms", q.get("mc"));
-    if (q.get("fc")) applyPreset("fs", q.get("fc"));
-    if (["h","g","f","e"].includes(q.get("c"))) state.ms.pos = q.get("c");   // compatibilidade
-    setN(state.ms,"es","es"); setN(state.fs,"ei","ei");
-    if (q.get("mp")==="c") state.ms.pos = "c";
-    if (q.get("fp")==="c") state.fs.pos = "c";
-    if (/^p[0-3]$/.test(q.get("v")||"")) state.v3 = q.get("v");
-    if (/^u-(max|mid)$/.test(q.get("v")||"")) state.vu = q.get("v");
-    if (q.get("tab")){ const t = q.get("tab"); if (TABS3.some(x=>x[0]===t)) state.tab3 = t; if (TABSU.some(x=>x[0]===t)) state.tabU = t; }
+    if (q.get("mat") in MATS) state.mat = q.get("mat");
+    if (q.get("aj") in FITS){ state.fit = q.get("aj"); state.custom = false; }
+    if (q.get("mc") || q.get("fc") || q.get("mp") || q.get("fp")){
+      state.custom = true;
+      if (q.get("mc")) applyPreset("ms", q.get("mc"));
+      if (q.get("fc")) applyPreset("fs", q.get("fc"));
+      setN(state.ms,"es","es"); setN(state.fs,"ei","ei");
+      if (q.get("mp")==="c") state.ms.pos = "c";
+      if (q.get("fp")==="c") state.fs.pos = "c";
+    }
+    if (["max","mid"].includes(q.get("cad"))) state.model = q.get("cad");
+    if (TABS.some(t=>t[0]===q.get("tab"))) state.tab = q.get("tab");
   }catch(e){}
+  if (!(state.mat in MATS)) state.mat = "latao";
+  if (!(state.fit in FITS)) state.fit = "medio";
   if (!["e","f","g","h","c"].includes(state.ms.pos)) state.ms.pos = "g";
   if (!["G","H","c"].includes(state.fs.pos)) state.fs.pos = "H";
   if (!(state.ms.g2 in F_TD2E)) state.ms.g2 = 6;
@@ -559,39 +546,45 @@ const state = JSON.parse(JSON.stringify(DEFAULTS));
   if (!(state.fs.g1 in F_TD1)) state.fs.g1 = 6;
   if (![2,3,4].includes(+state.dec)) state.dec = 3;
   if (![",","."].includes(state.sep)) state.sep = ",";
-  if (!["3d","us"].includes(state.mode)) state.mode = "3d";
+  if (!["3d","us"].includes(state.mode)) state.mode = "us";
+  if (!["max","mid"].includes(state.model)) state.model = "max";
+  if (!TABS.some(t=>t[0]===state.tab)) state.tab = "res";
 })();
 function applyPreset(which, code){
   const mm = /^(\d)([a-hA-H])(?:(\d)([a-hA-H]))?$/.exec(code||"");
   if (!mm) return false;
   const o = state[which];
   o.pos = mm[2]; o.g2 = +mm[1];
-  if (which==="ms") o.gd = mm[3] ? +mm[3] : +mm[1];
-  else o.g1 = mm[3] ? +mm[3] : +mm[1];
+  if (which==="ms") o.gd = mm[3] ? +mm[3] : +mm[1]; else o.g1 = mm[3] ? +mm[3] : +mm[1];
   return true;
 }
+function syncClasses(){
+  if (state.custom) return;
+  const s = suggested(state.mat, state.fit);
+  Object.assign(state.ms, s.ms); Object.assign(state.fs, s.fs);
+}
 function persist(){
-  try{ localStorage.setItem("rosca-state-v2", JSON.stringify(state)); }catch(e){}
+  try{ localStorage.setItem("rosca-state-v3", JSON.stringify(state)); }catch(e){}
   try{
-    const o = {m:state.mode, p:state.P, d:state.d};
-    if (state.mode==="3d") Object.assign(o,{e1:state.e1,e2:state.e2,k1:state.k1,k2:state.k2});
-    else {
+    const o = {m:state.mode, d:state.d, p:state.P, mat:state.mat};
+    if (state.custom){
       if (state.ms.pos==="c") Object.assign(o,{mp:"c",es:state.ms.es}); else o.mc = desigM();
       if (state.fs.pos==="c") Object.assign(o,{fp:"c",ei:state.fs.ei}); else o.fc = desigF();
-    }
+    } else o.aj = state.fit;
+    if (state.mode==="3d") o.err = state.err;
+    o.cad = state.model;
     history.replaceState(null,"","?"+new URLSearchParams(o).toString()+location.hash);
   }catch(e){}
 }
 const getK = k => k.split(".").reduce((o,p)=>o[p], state);
 function setK(k, v){ const ps = k.split("."); const last = ps.pop(); ps.reduce((o,p)=>o[p], state)[last] = v; }
-
-/* designações */
 const sNum = v => (v>0?"+":v<0?"−":"") + Math.abs(+v||0);
 function desigM(){ const m = state.ms; if (m.pos==="c") return `es${sNum(m.es)}`; return m.g2===m.gd ? `${m.g2}${m.pos}` : `${m.g2}${m.pos}${m.gd}${m.pos}`; }
 function desigF(){ const f = state.fs; if (f.pos==="c") return `EI${sNum(f.ei)}`; return f.g2===f.g1 ? `${f.g2}${f.pos}` : `${f.g2}${f.pos}${f.g1}${f.pos}`; }
+const desigFit = () => `${desigF()}/${desigM()}`;
 
 /* =====================================================================
-   CÁLCULOS (espelho das fórmulas da planilha v17 + classes ISO 965-1)
+   CÁLCULOS
    ===================================================================== */
 const eq = (a,b) => Math.abs(a-b) < 1e-9;
 const isNum = v => typeof v === "number" && isFinite(v);
@@ -604,42 +597,41 @@ function r40Round(x){
 }
 function calc(s){
   const P = s.P, d = s.d;
-  // ---- aba Métrica
+  // ---- Métrica (planilha)
   const m = {P, d};
   m.d1 = d - 1.2268*P;  m.he = 0.61343*P;  m.Rre = 0.14434*P;  m.S = m.d1*m.d1*0.7854;
   m.a = 0.036*P;  m.D = d + 2*m.a;  m.D1 = d - 1.0825*P;  m.hi = 0.5413*P + m.a;
   m.Rri = 0.073*P;  m.d2 = d - 0.64953*P;  m.H = 0.86603*P;  m.H8 = m.H/8; m.H4 = m.H/4; m.H6 = m.H/6;
 
-  // ---- impressão 3D: 4 cenários
-  const sc = [[s.e1,s.k1,"mín."],[s.e1,s.k2,"máx."],[s.e2,s.k1,"mín."],[s.e2,s.k2,"máx."]].map(([err,k,kl],i)=>{
-    const g = k*err, delta = 2*g, eng = 0.5413*P - delta;
-    const status = eng <= 0 ? "bad" : (eng < 0.2 ? "warn" : "ok");
-    const statusTxt = eng <= 0 ? "INVIÁVEL: passo fino" : (eng < 0.2 ? "ATENÇÃO: pouco engajamento" : "OK");
-    return {i, err, k, kl, g, delta, axial: 2*delta*TAN30, holeInc: 2*delta, eng, status, statusTxt};
-  });
-
-  // ---- usinagem ISO 965-1
+  // ---- ISO 965-1
   const row = ISO_P.find(r => eq(r[0],P));
   const u = {row};
   const ms = s.ms, fs = s.fs;
-  // desvio fundamental do macho (es)
+  // es do macho
   if (ms.pos === "c"){ u.esUm = +ms.es || 0; u.esOrig = "personalizado"; }
-  else if (ms.pos === "h"){ u.esUm = 0; u.esOrig = "ISO 965-1 (h)"; }
-  else if (!row){ u.esUm = "P fora da tabela"; }
-  else { const v = row[CLS_COL[ms.pos]]; u.esUm = (v==null) ? "n/d" : -v; u.esOrig = "tabela ISO 965-1"; }
-  u.es = isNum(u.esUm) ? u.esUm/1000 : 0;
-  // desvio fundamental da fêmea (EI)
+  else if (ms.pos === "h"){ u.esUm = 0; u.esOrig = "ISO 965-1 (h = 0)"; }
+  else {
+    const v = row ? row[CLS_COL[ms.pos]] : null;
+    if (v!=null){ u.esUm = -v; u.esOrig = "tabela ISO 965-1"; }
+    else { u.esUm = -Math.round(ES_BASE[ms.pos] + 11*P); u.esOrig = "fórmula ISO −("+ES_BASE[ms.pos]+" + 11·P): fora da tabela"; }
+  }
+  u.es = u.esUm/1000;
+  // EI da fêmea
   if (fs.pos === "c"){ u.EIUm = +fs.ei || 0; u.EIOrig = "personalizado"; }
-  else if (fs.pos === "H"){ u.EIUm = 0; u.EIOrig = "ISO 965-1 (H)"; }
-  else if (!row){ u.EIUm = "P fora da tabela"; }
-  else { u.EIUm = row[1]; u.EIOrig = "tabela ISO 965-1 (EI G = |es g|)"; }
-  u.EI = isNum(u.EIUm) ? u.EIUm/1000 : 0;
-
-  // Td (Ø maior do macho)
-  u.Td6 = row ? row[4] : "P fora da tabela";
+  else if (fs.pos === "H"){ u.EIUm = 0; u.EIOrig = "ISO 965-1 (H = 0)"; }
+  else if (row){ u.EIUm = row[1]; u.EIOrig = "tabela ISO 965-1 (EI G = |es g|)"; }
+  else { u.EIUm = Math.round(15 + 11*P); u.EIOrig = "fórmula ISO 15 + 11·P: fora da tabela"; }
+  u.EI = u.EIUm/1000;
+  // Td(6) e TD1(6)
+  if (row){ u.Td6 = row[4]; u.Td6Orig = "tabela ISO 965-1"; }
+  else { u.Td6 = r40Round(180*Math.pow(P,2/3) - 3.15/Math.sqrt(P)); u.Td6Orig = "fórmula 180·P^(2/3) − 3,15/√P"; }
+  if (row && row[5]!=null){ u.TD1_6 = row[5]; u.TD1Orig = "tabela ISO 965-1"; }
+  else { u.TD1_6 = r40Round(P < 1 ? 433*P - 190*Math.pow(P,1.22) : 230*Math.pow(P,0.7)); u.TD1Orig = P<1 ? "fórmula 433·P − 190·P^1,22" : "fórmula 230·P^0,7"; }
   u.TdUm = isNum(u.Td6) ? (ms.gd===6 ? u.Td6 : r40Round(F_TDE[ms.gd]*u.Td6)) : null;
   u.Td = isNum(u.TdUm) ? u.TdUm/1000 : 0;
-  // faixa e Td2(6)
+  u.TD1Um = isNum(u.TD1_6) ? (fs.g1===6 ? u.TD1_6 : r40Round(F_TD1[fs.g1]*u.TD1_6)) : null;
+  u.TD1 = isNum(u.TD1Um) ? u.TD1Um/1000 : 0;
+  // faixa, Td2, TD2
   let fx = null; FAIXAS.forEach((f,i)=>{ if (f[0] <= d - 1e-9) fx = i+1; });
   u.faixa = fx;
   u.dg = fx ? Math.sqrt(FAIXAS[fx-1][0]*FAIXAS[fx-1][1]) : NaN;
@@ -649,40 +641,67 @@ function calc(s){
   u.Td2F = 90*Math.pow(P,0.4)*Math.pow(u.dg,0.1);
   u.Td2R = r40Round(u.Td2F);
   u.Td2_6 = isNum(u.Td2Tab) ? u.Td2Tab : u.Td2R;
-  u.Td2Orig = isNum(u.Td2Tab) ? "tabela ISO 965-1" : "fórmula aproximada (pode errar 1 passo R40)";
+  u.Td2Orig = isNum(u.Td2Tab) ? "tabela ISO 965-1" : "fórmula 90·P^0,4·dg^0,1 (pode errar 1 passo R40)";
   u.Td2Um = u.Td2_6==null ? null : (ms.g2===6 ? u.Td2_6 : r40Round(F_TD2E[ms.g2]*u.Td2_6));
-  u.Td2 = u.Td2Um==null ? NaN : u.Td2Um/1000;
-  // TD1 (Ø menor da fêmea)
-  u.TD1_6 = row ? (row[5]==null ? "n/d" : row[5]) : "P fora da tabela";
-  u.TD1Um = isNum(u.TD1_6) ? (fs.g1===6 ? u.TD1_6 : r40Round(F_TD1[fs.g1]*u.TD1_6)) : null;
-  u.TD1 = isNum(u.TD1Um) ? u.TD1Um/1000 : 0;
-  // TD2 (Ø médio da fêmea)
+  u.Td2 = u.Td2Um==null ? 0 : u.Td2Um/1000;
   u.TD2Tab = (key && key[3]!=null) ? key[3] : "não tabelado";
   u.TD2F = 1.32*u.Td2F;
   u.TD2R = r40Round(u.TD2F);
   u.TD2_6 = isNum(u.TD2Tab) ? u.TD2Tab : u.TD2R;
-  u.TD2Orig = isNum(u.TD2Tab) ? "tabela ISO 965-1" : "fórmula aproximada (pode errar 1 passo R40)";
+  u.TD2Orig = isNum(u.TD2Tab) ? "tabela ISO 965-1" : "fórmula 1,32·Td2(6) (pode errar 1 passo R40)";
   u.TD2Um = fs.g2===6 ? u.TD2_6 : (u.Td2_6==null ? null : r40Round(F_TD2I[fs.g2]*u.Td2_6));
-  u.TD2 = u.TD2Um==null ? NaN : u.TD2Um/1000;
+  u.TD2 = u.TD2Um==null ? 0 : u.TD2Um/1000;
 
-  // macho usinagem
+  // macho: E = matéria máxima, I = meio da tolerância
   u.mE4 = d + u.es; u.mF4 = u.Td; u.mH4 = u.mE4; u.mG4 = u.mH4 - u.mF4; u.mI4 = u.mE4 - u.mF4/2;
   u.mE5 = u.mE4/2; u.mI5 = u.mI4/2;
   u.mE6 = m.d2 + u.es; u.mF6 = u.Td2; u.mH6 = u.mE6; u.mG6 = u.mH6 - u.mF6; u.mI6 = u.mE6 - u.mF6/2;
   u.mE7 = u.mE6/2; u.mI7 = u.mI6/2;
-  // fêmea usinagem
+  // fêmea
   u.fE4 = m.D1 + u.EI; u.fF4 = u.TD1; u.fG4 = u.fE4; u.fH4 = u.fG4 + u.fF4; u.fI4 = u.fE4 + u.fF4/2;
   u.fE6 = u.fE4/2; u.fI6 = u.fI4/2;
   u.fE7 = (m.d2 + u.EI)/2; u.fI7 = (m.d2 + u.EI + u.TD2/2)/2;
   u.D1min = m.D1 + u.EI; u.D1max = u.D1min + u.TD1;
   u.D2min = m.d2 + u.EI; u.D2max = u.D2min + u.TD2;
   u.Dmin = d + u.EI;
-  // ajuste no Ø médio
-  u.fitMin = u.D2min - u.mH6;                       // = EI − es
-  u.fitMax = u.D2max - u.mG6;                       // = EI + TD2 − es + Td2
+  // ajuste (Ø médio)
+  u.fitMin = u.D2min - u.mH6;
+  u.fitMax = u.D2max - u.mG6;
   u.fitType = u.fitMin >= -1e-12 ? "folga" : (u.fitMax <= 1e-12 ? "interf" : "trans");
   u.folgaFlanco = u.fitMin/4; u.jogoAxial = u.fitMin*TAN30;
-  return {m, sc, u};
+
+  // ---- impressão 3D: uma impressora, folga extra só na fêmea
+  const p3 = {err:s.err, g:s.err, delta:2*s.err};
+  p3.axial = 2*p3.delta*TAN30;
+  const is3d = s.mode === "3d";
+  const dl = is3d ? p3.delta : 0;
+
+  // ---- geometria do modelo CAD (resultado)
+  const mid = s.model === "mid";
+  const mg = mid ? {rp:u.mI7, rc:u.mI5, R:m.Rre} : {rp:u.mE7, rc:u.mE5, R:m.Rre};
+  const fg0 = mid ? {rp:u.fI7, rc:u.fI6, R:P/16} : {rp:u.fE7, rc:u.fE6, R:P/16};
+  const fg = {rp:fg0.rp + dl, rc:fg0.rc + dl, R:fg0.R};
+  const cad = {mid, dl, mg, fg, fg0};
+  // macho: centro do raio do fundo e altura do filete
+  cad.mApex = mg.rp - S3*P/4;
+  cad.mC = cad.mApex + 2*mg.R;                    // distância do eixo ao centro do R
+  cad.mRoot = cad.mC - mg.R;
+  cad.mCrest = Math.min(mg.rc, mg.rp + S3*P/4);
+  cad.hExt = cad.mCrest - cad.mRoot;
+  // fêmea
+  cad.fApex = fg.rp + S3*P/4;
+  cad.fC = cad.fApex - 2*fg.R;
+  cad.fRoot = cad.fC + fg.R;
+  cad.fCrest = Math.max(fg.rc, fg.rp - S3*P/4);
+  cad.hInt = cad.fRoot - cad.fCrest;
+  cad.eng = cad.mCrest - cad.fCrest;              // sobreposição radial dos filetes
+  cad.status = cad.eng <= 0 ? "bad" : (cad.eng < 0.2 ? "warn" : "ok");
+  cad.statusTxt = cad.eng <= 0 ? "INVIÁVEL: filetes não se tocam" : (cad.eng < 0.2 ? "ATENÇÃO: pouco engajamento" : "OK");
+  // folga total no Ø médio do modelo (diametral)
+  cad.fitModel = 2*(fg.rp - mg.rp);
+  cad.fitMin3d = u.fitMin + 2*dl;
+  cad.fitMax3d = u.fitMax + 2*dl;
+  return {m, u, p3, cad, is3d};
 }
 
 /* =====================================================================
@@ -701,23 +720,24 @@ function fmtUm(v){
   if (v==null || !isFinite(v)) return "—";
   return Number.isInteger(v) ? String(v) : fmt(v,1);
 }
-const sgn = v => (isNum(v) && v > 0 ? "+" : "") ;
+const sgn = v => (isNum(v) && v > 1e-12 ? "+" : "");
 const fmtIn = v => String(+v).replace(".", state.sep);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const numTd = (v, cls="") => `<td class="num ${cls}" data-copy="${esc(fmt(v))}">${fmt(v)}</td>`;
+const umSigned = v => isNum(v) ? sgn(v)+fmtUm(v)+" µm" : esc(v);
+const umOrTxt = v => isNum(v) ? fmtUm(v)+" µm" : esc(v ?? "—");
 const FIT = {
   folga:  {t:"Com folga", c:"ok", ic:"✓"},
   trans:  {t:"Incerto (transição)", c:"warn", ic:"≈"},
   interf: {t:"Com interferência", c:"int", ic:"⇥"}
 };
 const fitChip = t => `<span class="st ${FIT[t].c}">${FIT[t].ic} ${FIT[t].t}</span>`;
+const engChip = c => `<span class="st ${c.status}">${c.status==="ok"?"✓":c.status==="warn"?"!":"✕"} ${esc(c.statusTxt)}</span>`;
+const CHEV = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5L6 8l3.5-3.5"/></svg>';
 
 /* =====================================================================
-   DESENHO — perfil em corte axial
+   DESENHO
    ===================================================================== */
-const S3 = Math.sqrt(3);
-/* rp = raio onde a largura do filete = P/2, rc = raio da crista, R = raio do fundo,
-   dir = +1 macho (dente para fora) / -1 fêmea (dente para dentro), phase = centro de um dente. */
 function threadPoints(g, P, xA, xB, dir, phase){
   const pts = [];
   let w = P/4 - dir*(g.rc - g.rp)/S3, rcE = g.rc;
@@ -735,519 +755,154 @@ function threadPoints(g, P, xA, xB, dir, phase){
       pts.push([xr + R*Math.sin(a), rC - dir*R*Math.cos(a)]);
     }
   }
-  return {pts, crest:rcE, root:rC - dir*R};
+  return {pts, crest:rcE, root:rC - dir*R, w, rC};
 }
+const polyPath = (pts, sx, sy) => pts.map((p,i)=>(i?"L":"M")+sx(p[0]).toFixed(2)+" "+sy(p[1]).toFixed(2)).join("");
 
-function curView(){ return state.mode==="3d" ? state.v3 : state.vu; }
-function viewGeom(r, view){
-  const {m,u,sc} = r, P = m.P;
-  const machoNom = {rp:m.d2/2, rc:m.d/2,  R:m.Rre};
-  const femeaNom = {rp:m.d2/2, rc:m.D1/2, R:P/16};
-  if (view.startsWith("p")){
-    const s = sc[+view.slice(1)] || sc[0], dl = s.delta;
-    return {kind:"3d", s,
-      macho:machoNom, femea:{rp:m.d2/2+dl, rc:m.D1/2+dl, R:P/16},
-      ghosts:[{dir:-1, g:femeaNom}], arrow:{dir:-1, from:femeaNom}, shift:dl};
-  }
-  const mid = view === "u-mid";
-  const macho = mid ? {rp:u.mI7, rc:u.mI5, R:m.Rre} : {rp:u.mE7, rc:u.mE5, R:m.Rre};
-  const femea = mid ? {rp:u.fI7, rc:u.fI6, R:P/16} : {rp:u.fE7, rc:u.fE6, R:P/16};
-  const ghosts = [{dir:+1, g:machoNom}];
-  if (!eq(femea.rp, femeaNom.rp) || !eq(femea.rc, femeaNom.rc)) ghosts.push({dir:-1, g:femeaNom});
-  return {kind:"us", mid, macho, femea, ghosts, arrow:{dir:+1, from:machoNom}, shift:macho.rp - m.d2/2};
-}
+/* Desenho de resultado: perfil para construção, com as cotas do esboço de referência */
+function drawResult(r){
+  const {m, cad} = r, P = m.P;
+  const W = 1000, Lg = 200, Rg = 210, plotW = W - Lg - Rg;
+  const xA = -0.6*P, xB = 2.4*P, s = plotW/(xB-xA);
+  const mT = threadPoints(cad.mg, P, xA, xB, +1, 0);
+  const fT = threadPoints(cad.fg, P, xA, xB, -1, P/2);
+  const rMax = Math.max(fT.root, mT.crest) + 0.32*P, rMin = Math.min(mT.root, fT.crest) - 0.36*P;
+  const top = 14, plotH = (rMax-rMin)*s, band = 84;
+  const yPB = top + plotH, H = Math.round(yPB + band);
+  const sx = x => Lg + (x-xA)*s, sy = rr => top + (rMax-rr)*s;
+  const mPath = polyPath(mT.pts, sx, sy) + `L${sx(xB+2*P)} ${yPB+20}L${sx(xA-2*P)} ${yPB+20}Z`;
+  const fPath = polyPath(fT.pts, sx, sy) + `L${sx(xB+2*P)} -20L${sx(xA-2*P)} -20Z`;
+  const dimV = (x, y0, y1) => `<line x1="${x}" x2="${x}" y1="${y0}" y2="${y1}" stroke="var(--dim)" marker-start="url(#arR)" marker-end="url(#arR)"/>`;
+  const ext = (x0, x1, y, c="var(--dim)") => `<line x1="${x0}" x2="${x1}" y1="${y}" y2="${y}" stroke="${c}" stroke-opacity=".55" stroke-width="1"/>`;
+  const lbl = (x, y, cap, val, anchor="start", color="var(--text-2)") => `
+    <text class="svg-t cap" x="${x}" y="${y}" text-anchor="${anchor}" style="fill:${color}">${cap}</text>
+    <text class="svg-t v" x="${x}" y="${y+18}" text-anchor="${anchor}">${val}</text>`;
 
-function polyPath(pts, sx, sy){
-  return pts.map((p,i)=>(i?"L":"M")+sx(p[0]).toFixed(2)+" "+sy(p[1]).toFixed(2)).join("");
-}
+  // --- lado esquerdo: macho (externo)
+  const yE = sy(mT.crest), yRm = sy(mT.root);
+  const xDimL = Lg - 34;
+  const left = `
+    ${ext(14, sx(-mT.w), yE)}
+    ${lbl(14, yE-30, "Ø eixo", fmt(2*mT.crest))}
+    ${ext(xDimL-8, sx(P/2), yRm)}
+    ${dimV(xDimL, yE, yRm)}
+    ${lbl(xDimL-10, (yE+yRm)/2-6, "h filete", fmt(cad.hExt), "end")}`;
+  // --- lado direito: fêmea (interno)
+  const yF = sy(fT.crest), yRf = sy(fT.root);
+  const xDimR = W - Rg + 34;
+  const right = `
+    ${ext(sx(1.5*P + fT.w), W-14, yF, "var(--femea-stroke)")}
+    ${lbl(W-14, yF+18, "Ø furo", fmt(2*fT.crest), "end", "var(--femea-stroke)")}
+    ${ext(sx(2*P), xDimR+8, yRf, "var(--femea-stroke)")}
+    ${dimV(xDimR, yRf, yF)}
+    ${lbl(xDimR+10, (yRf+yF)/2-6, "h filete", fmt(cad.hInt), "start", "var(--femea-stroke)")}`;
+  // --- raios e centros
+  const xm = P/2, xf = 2*P;
+  const cM = [sx(xm), sy(cad.mC)], cF = [sx(xf), sy(cad.fC)];
+  const pM = [sx(xm - cad.mg.R*Math.SQRT1_2), sy(cad.mC - cad.mg.R*Math.SQRT1_2)];
+  const pF = [sx(xf + cad.fg.R*Math.SQRT1_2), sy(cad.fC + cad.fg.R*Math.SQRT1_2)];
+  const cross = ([x,y], c) => `<g stroke="${c}" stroke-width="1.4"><line x1="${x-6}" x2="${x+6}" y1="${y}" y2="${y}"/><line x1="${x}" x2="${x}" y1="${y-6}" y2="${y+6}"/></g><circle cx="${x}" cy="${y}" r="2.4" fill="${c}"/>`;
+  const radii = `
+    <circle cx="${cM[0]}" cy="${cM[1]}" r="${cad.mg.R*s}" fill="none" stroke="var(--macho-stroke)" stroke-dasharray="3 3" stroke-opacity=".6"/>
+    <circle cx="${cF[0]}" cy="${cF[1]}" r="${cad.fg.R*s}" fill="none" stroke="var(--femea-stroke)" stroke-dasharray="3 3" stroke-opacity=".7"/>
+    ${cross(cM,"var(--macho-stroke)")}${cross(cF,"var(--femea-stroke)")}
+    <path d="M${pM[0]} ${pM[1]} L${pM[0]-46} ${pM[1]+40} L${pM[0]-70} ${pM[1]+40}" fill="none" stroke="var(--dim)"/>
+    <rect x="${pM[0]-160}" y="${pM[1]+28}" width="88" height="24" rx="6" fill="var(--plot-bg)" fill-opacity=".9"/>
+    <text class="svg-t v" x="${pM[0]-74}" y="${pM[1]+45}" text-anchor="end">R ${fmt(cad.mg.R)}</text>
+    <path d="M${pF[0]} ${pF[1]} L${pF[0]+40} ${pF[1]-38} L${pF[0]+62} ${pF[1]-38}" fill="none" stroke="var(--femea-stroke)"/>
+    <rect x="${pF[0]+64}" y="${pF[1]-52}" width="88" height="24" rx="6" fill="var(--plot-bg)" fill-opacity=".9"/>
+    <text class="svg-t v" x="${pF[0]+68}" y="${pF[1]-34}">R ${fmt(cad.fg.R)}</text>`;
+  // --- passo
+  const yP = yPB - 26, xp0 = sx(P/2), xp1 = sx(1.5*P);
+  const passo = `
+    <line x1="${xp1}" x2="${xp1}" y1="${yRm}" y2="${yP+8}" stroke="var(--dim)" stroke-opacity=".45" stroke-dasharray="2 3"/>
+    <line x1="${xp0}" x2="${xp1}" y1="${yP}" y2="${yP}" stroke="var(--dim)" marker-start="url(#arR)" marker-end="url(#arR)"/>
+    <rect x="${(xp0+xp1)/2-58}" y="${yP-12}" width="116" height="22" rx="6" fill="var(--plot-bg)"/>
+    <text class="svg-t v" text-anchor="middle" x="${(xp0+xp1)/2}" y="${yP+5}">P ${fmt(P)}</text>`;
+  // --- centro dos raios referenciado à linha de centro da peça (faixa inferior com quebra)
+  const yBr = yPB + 14, yAx = H - 14;
+  let zig = `M0 ${yBr}`; for (let x=0; x<=W; x+=16) zig += ` L${x+8} ${yBr + ((x/16)%2 ? -4 : 4)}`;
+  const axis = `
+    <rect x="0" y="${yPB}" width="${W}" height="${band}" fill="var(--plot-bg)"/>
+    <path d="${zig}" fill="none" stroke="var(--line-strong)" stroke-width="1.2"/>
+    <line x1="0" x2="${W}" y1="${yAx}" y2="${yAx}" stroke="var(--accent)" stroke-width="1.2" stroke-dasharray="16 4 3 4"/>
+    <text class="svg-t s" x="14" y="${yAx-8}">linha de centro da peça (eixo)</text>
+    <line x1="${cM[0]}" x2="${cM[0]}" y1="${cM[1]}" y2="${yAx}" stroke="var(--macho-stroke)" stroke-dasharray="5 3" marker-end="url(#arR)"/>
+    <line x1="${cF[0]}" x2="${cF[0]}" y1="${cF[1]}" y2="${yAx}" stroke="var(--femea-stroke)" stroke-dasharray="5 3" marker-end="url(#arE)"/>
+    <rect x="${cM[0]+6}" y="${yBr+10}" width="190" height="40" rx="6" fill="var(--plot-bg)"/>
+    <text class="svg-t cap" x="${cM[0]+10}" y="${yBr+24}">centro R (macho)</text>
+    <text class="svg-t v" x="${cM[0]+10}" y="${yBr+42}">r ${fmt(cad.mC)}</text>
+    <rect x="${cF[0]+6}" y="${yBr+10}" width="190" height="40" rx="6" fill="var(--plot-bg)"/>
+    <text class="svg-t cap" x="${cF[0]+10}" y="${yBr+24}" style="fill:var(--femea-stroke)">centro R (fêmea)</text>
+    <text class="svg-t v" x="${cF[0]+10}" y="${yBr+42}">r ${fmt(cad.fC)}</text>`;
 
-function drawProfile(r){
-  const {m} = r, P = m.P;
-  const G = viewGeom(r, curView());
-  const W = 1000, padL = 16, gut = 196, plotW = W - padL - gut;
-  const xA = -0.5*P, xB = 2.5*P;
-  const s = plotW/(xB-xA);
-  const mT = threadPoints(G.macho, P, xA, xB, +1, 0);
-  const fT = threadPoints(G.femea, P, xA, xB, -1, P/2);
-  const gTs = G.ghosts.map(gh => threadPoints(gh.g, P, xA, xB, gh.dir, gh.dir>0 ? 0 : P/2));
-  const all = [mT.root, mT.crest, fT.root, fT.crest, ...gTs.flatMap(g=>[g.root,g.crest])];
-  const rMin = Math.min(...all) - 0.14*P, rMax = Math.max(...all) + 0.14*P;
-  const top = 58, bot = 30;
-  const H = Math.round((rMax-rMin)*s + top + bot);
-  const sx = x => padL + (x-xA)*s;
-  const sy = rr => top + (rMax-rr)*s;
-
-  const mPath = polyPath(mT.pts, sx, sy) + `L${sx(xB+2*P)} ${H+10}L${sx(xA-2*P)} ${H+10}Z`;
-  const fPath = polyPath(fT.pts, sx, sy) + `L${sx(xB+2*P)} -10L${sx(xA-2*P)} -10Z`;
-  const gPaths = gTs.map(g => polyPath(g.pts, sx, sy));
-
-  const is3d = G.kind==="3d";
-  const refs = [
-    {r:mT.crest, lab:"Ø ext. macho", c:"m"},
-    {r:G.macho.rp, lab:is3d?"d2 (Ø médio)":"d2 macho", c:"p"},
-    {r:mT.root,  lab:"Ø fundo macho", c:"m"},
-    {r:fT.crest, lab:is3d && G.shift>0 ? "D1 + 2δ (furo)" : "D1 fêmea (furo)", c:"f"},
-    {r:fT.root,  lab:"Ø fundo fêmea", c:"f"},
-  ];
-  if (!eq(G.femea.rp, G.macho.rp)) refs.push({r:G.femea.rp, lab:"D2 fêmea", c:"p"});
-  const L = refs.map(o=>({...o, y:sy(o.r)})).sort((a,b)=>a.y-b.y);
-  const minGap = 34;
-  L.forEach((o,i)=>{ o.ly = i ? Math.max(o.y, L[i-1].ly + minGap) : o.y; });
-  const over = L.length ? L[L.length-1].ly - (H-12) : 0;
-  if (over > 0) L.forEach(o=> o.ly -= over);
-  const xLine0 = padL, xLine1 = padL + plotW, xLab = W - gut + 22;
-  const colorOf = c => c==="m" ? "var(--macho-stroke)" : c==="f" ? "var(--femea-stroke)" : "var(--muted)";
-  const refSvg = L.map(o=>`
-    <line x1="${xLine0}" x2="${xLine1}" y1="${o.y}" y2="${o.y}" stroke="${colorOf(o.c)}" stroke-opacity=".35" stroke-width="1" stroke-dasharray="${o.c==='p'?'10 4 2 4':'3 4'}"/>
-    <path d="M${xLine1} ${o.y} L${xLab-8} ${o.ly}" stroke="${colorOf(o.c)}" stroke-opacity=".5" fill="none"/>
-    <text class="svg-t" x="${xLab}" y="${o.ly-2}">${fmt(2*o.r)}</text>
-    <text class="svg-t s" x="${xLab}" y="${o.ly+12}">${o.lab}</text>`).join("");
-
-  const yP = 22, xp0 = sx(0), xp1 = sx(P);
-  const pDim = `
-    <line x1="${xp0}" x2="${xp0}" y1="${yP-8}" y2="${sy(mT.crest)}" stroke="var(--dim)" stroke-opacity=".35" stroke-dasharray="2 3"/>
-    <line x1="${xp1}" x2="${xp1}" y1="${yP-8}" y2="${sy(mT.crest)}" stroke="var(--dim)" stroke-opacity=".35" stroke-dasharray="2 3"/>
-    <line x1="${xp0}" x2="${xp1}" y1="${yP}" y2="${yP}" stroke="var(--dim)" marker-start="url(#ar)" marker-end="url(#ar)"/>
-    <rect x="${(xp0+xp1)/2-52}" y="${yP-11}" width="104" height="20" rx="5" fill="var(--plot-bg)"/>
-    <text class="svg-t" text-anchor="middle" x="${(xp0+xp1)/2}" y="${yP+4}">P = ${fmt(P)}</text>`;
-
-  // cota do deslocamento
-  let shiftSvg = "";
-  const sh = Math.abs(G.shift);
-  if (sh > 1e-9){
-    const isF = G.arrow.dir < 0;
-    const xs = isF ? sx(1.5*P) : sx(P);
-    const fromT = threadPoints(G.arrow.from, P, 0, P, G.arrow.dir, isF ? P/2 : 0);
-    const yA = sy(fromT.crest), yB = sy(isF ? fT.crest : mT.crest);
-    const shLab = is3d ? `δ = ${fmt(G.shift)}` : `Δr = ${sgn(G.shift)}${fmt(G.shift)}`;
-    const big = Math.abs(yB-yA) > 14;
-    const lw = shLab.length*8+14;
-    shiftSvg = `
-      <line x1="${xs}" x2="${xs}" y1="${yA}" y2="${yB}" stroke="var(--accent)" stroke-width="1.6" ${big?'marker-start="url(#arA)" marker-end="url(#arA)"':''}/>
-      <rect x="${xs+8}" y="${(yA+yB)/2-11}" width="${lw}" height="22" rx="6" fill="var(--accent)"/>
-      <text class="svg-t" style="fill:#fff" x="${xs+15}" y="${(yA+yB)/2+4}">${shLab}</text>`;
-  }
-
-  document.getElementById("plotProfile").innerHTML = `
-  <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Perfil da rosca macho e fêmea em corte">
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Perfil da rosca para construção">
     <defs>
-      <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1L10 5L0 9z" fill="var(--dim)"/></marker>
-      <marker id="arA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1L10 5L0 9z" fill="var(--accent)"/></marker>
-      <clipPath id="clipP"><rect x="${padL}" y="0" width="${plotW}" height="${H}"/></clipPath>
+      <marker id="arR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1L10 5L0 9z" fill="var(--dim)"/></marker>
+      <marker id="arE" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1L10 5L0 9z" fill="var(--femea-stroke)"/></marker>
+      <clipPath id="clipR"><rect x="${Lg}" y="0" width="${plotW}" height="${yPB}"/></clipPath>
       <clipPath id="clipF"><path d="${fPath}"/></clipPath>
       <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="var(--femea-stroke)" stroke-opacity=".28" stroke-width="2"/></pattern>
-      <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--macho-fill)" stop-opacity="1"/><stop offset="1" stop-color="var(--macho-fill)" stop-opacity=".55"/></linearGradient>
+      <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--macho-fill)"/><stop offset="1" stop-color="var(--macho-fill)" stop-opacity=".55"/></linearGradient>
     </defs>
-    ${refSvg}
-    <g clip-path="url(#clipP)">
-      <path d="${fPath}" fill="var(--femea-fill)" stroke="none"/>
+    <g clip-path="url(#clipR)">
+      <path d="${fPath}" fill="var(--femea-fill)"/>
       <path d="${fPath}" fill="url(#hatch)" stroke="var(--femea-stroke)" stroke-width="2" stroke-linejoin="round"/>
       <path d="${mPath}" fill="url(#metal)" stroke="var(--macho-stroke)" stroke-width="2" stroke-linejoin="round"/>
       <g clip-path="url(#clipF)"><path d="${mPath}" fill="var(--accent)" fill-opacity=".85"/></g>
-      ${gPaths.map(p=>`<path d="${p}" fill="none" stroke="var(--ghost)" stroke-width="1.4" stroke-dasharray="5 4"/>`).join("")}
-      <line x1="${padL}" x2="${padL+plotW}" y1="${sy(m.d2/2)}" y2="${sy(m.d2/2)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="14 4 2 4"/>
+      <line x1="${Lg}" x2="${Lg+plotW}" y1="${sy(m.d2/2)}" y2="${sy(m.d2/2)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="14 4 2 4" stroke-opacity=".7"/>
+      <text class="svg-t cap" x="${Lg+10}" y="${top+20}" style="fill:var(--femea-stroke)">Interno · fêmea</text>
+      <text class="svg-t cap" x="${Lg+10}" y="${yPB-58}" style="fill:var(--macho-stroke)">Externo · macho</text>
     </g>
-    ${pDim}
-    ${shiftSvg}
-    <text class="svg-t s" x="${padL+8}" y="${H-10}">↓ eixo da rosca</text>
+    <rect x="${Lg}" y="0.5" width="${plotW}" height="${yPB}" fill="none" stroke="var(--line)"/>
+    ${left}${right}${passo}${axis}${radii}
   </svg>`;
-
-  const ghostTxt = is3d ? "Fêmea nominal (sem folga)" : (G.ghosts.length>1 ? "Macho e fêmea nominais" : "Macho nominal");
-  const interf = !is3d && r.u.fitMin < -1e-12;
-  document.getElementById("legend").innerHTML = `
-    <span><i class="sw m"></i>Macho ${is3d?"(nominal)":G.mid?"(meio da tolerância)":"(matéria máxima)"}</span>
-    <span><i class="sw f"></i>Fêmea ${is3d?"(com folga δ)":G.mid?"(meio da tolerância)":"(matéria máxima)"}</span>
-    <span><i class="sw g"></i>${ghostTxt}</span>
-    <span><i class="sw p"></i>Ø médio nominal d2</span>
-    ${interf?'<span><i class="sw i"></i>Interferência</span>':""}`;
-  document.getElementById("visSub").textContent = is3d
-    ? `Impressão 3D · erro ${fmtIn(G.s.err)} mm · k ${fmtIn(G.s.k)} · corte axial em escala real`
-    : `Usinagem ${desigF()}/${desigM()} · ${G.mid?"CAD no meio da tolerância":"CAD em matéria máxima"} · escala real`;
 }
 
-/* ---------- Vista geral ---------- */
+/* Vista geral */
 function drawOverview(r){
-  const {m} = r, P = m.P, d = m.d;
-  const G = viewGeom(r, curView());
-  const W = 1000, Hmax = 260;
-  const nutOut = Math.max(G.femea.rp, m.D/2) + Math.max(0.35*d, 2*P);
-  const s = (Hmax-56)/(2*nutOut);
+  const {m, cad} = r, P = m.P, d = m.d;
+  const W = 1000, Hmax = 240;
+  const nutOut = Math.max(cad.fg.rp, m.D/2) + Math.max(0.35*d, 2*P);
+  const s = (Hmax-50)/(2*nutOut);
   let L = 760/(1.25*s);
   L = Math.max(8*P, Math.min(L, Math.max(2.5*d, 8*P)));
-  const cy = Hmax/2 + 6;
-  const x0 = Math.max(90, (W - L*1.25*s)/2);
-  const sx = x => x0 + x*s;
-  const yT = rr => cy - rr*s, yB = rr => cy + rr*s;
-  const top = threadPoints(G.macho, P, 0, L, +1, 0).pts.filter(p=>p[0]>=0 && p[0]<=L);
-  const botRaw = threadPoints(G.macho, P, 0, L, +1, P/2).pts.filter(p=>p[0]>=0 && p[0]<=L);
+  const cy = Hmax/2 + 6, x0 = Math.max(90, (W - L*1.25*s)/2);
+  const sx = x => x0 + x*s, yT = rr => cy - rr*s, yB = rr => cy + rr*s;
+  const top = threadPoints(cad.mg, P, 0, L, +1, 0).pts.filter(p=>p[0]>=0 && p[0]<=L);
+  const bot = threadPoints(cad.mg, P, 0, L, +1, P/2).pts.filter(p=>p[0]>=0 && p[0]<=L);
   const Lb = L*1.25;
-  const tPath = top.map(p=>"L"+sx(p[0]).toFixed(1)+" "+yT(p[1]).toFixed(1)).join("");
-  const bPath = botRaw.slice().reverse().map(p=>"L"+sx(p[0]).toFixed(1)+" "+yB(p[1]).toFixed(1)).join("");
-  const shank = `L${sx(L)} ${yT(d/2)}L${sx(Lb)} ${yT(d/2)}L${sx(Lb)} ${yB(d/2)}L${sx(L)} ${yB(d/2)}`;
-  const bolt = `M${sx(0)} ${yT(m.d1/2)}` + tPath + shank + bPath + `L${sx(0)} ${yB(m.d1/2)}Z`;
+  const bolt = `M${sx(0)} ${yT(m.d1/2)}` + top.map(p=>"L"+sx(p[0]).toFixed(1)+" "+yT(p[1]).toFixed(1)).join("")
+    + `L${sx(L)} ${yT(d/2)}L${sx(Lb)} ${yT(d/2)}L${sx(Lb)} ${yB(d/2)}L${sx(L)} ${yB(d/2)}`
+    + bot.slice().reverse().map(p=>"L"+sx(p[0]).toFixed(1)+" "+yB(p[1]).toFixed(1)).join("") + `L${sx(0)} ${yB(m.d1/2)}Z`;
   let helix = "";
   const step = (P*s) < 3 ? Math.ceil(3/(P*s)) : 1;
-  for (let k=0; k*P + P/2 <= L; k+=step){
-    helix += `<line x1="${sx(k*P)}" y1="${yT(G.macho.rc)}" x2="${sx(k*P+P/2)}" y2="${yB(G.macho.rc)}"/>`;
-  }
+  for (let k=0; k*P + P/2 <= L; k+=step) helix += `<line x1="${sx(k*P)}" y1="${yT(cad.mg.rc)}" x2="${sx(k*P+P/2)}" y2="${yB(cad.mg.rc)}"/>`;
   const nx0 = 0.15*L, nx1 = 0.85*L;
-  const fpts = threadPoints(G.femea, P, nx0, nx1, -1, P/2).pts.filter(p=>p[0]>=nx0 && p[0]<=nx1);
+  const fpts = threadPoints(cad.fg, P, nx0, nx1, -1, P/2).pts.filter(p=>p[0]>=nx0 && p[0]<=nx1);
   const nut = `M${sx(nx0)} ${yT(nutOut)}` + fpts.map(p=>"L"+sx(p[0]).toFixed(1)+" "+yT(p[1]).toFixed(1)).join("") + `L${sx(nx1)} ${yT(nutOut)}Z`;
   const dimX = x0 - 26;
-  document.getElementById("plotOver").innerHTML = `
-  <svg viewBox="0 0 ${W} ${Hmax}" role="img" aria-label="Vista geral do parafuso e da porca">
+  return `<svg viewBox="0 0 ${W} ${Hmax}" role="img" aria-label="Vista geral do parafuso e da porca">
     <defs>
-      <linearGradient id="boltG" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="var(--macho-fill)" stop-opacity=".55"/><stop offset=".35" stop-color="var(--macho-fill)"/><stop offset="1" stop-color="var(--macho-fill)" stop-opacity=".45"/>
-      </linearGradient>
+      <linearGradient id="boltG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--macho-fill)" stop-opacity=".55"/><stop offset=".35" stop-color="var(--macho-fill)"/><stop offset="1" stop-color="var(--macho-fill)" stop-opacity=".45"/></linearGradient>
       <pattern id="hatch2" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="var(--femea-stroke)" stroke-opacity=".3" stroke-width="2"/></pattern>
       <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 1L10 5L0 9z" fill="var(--dim)"/></marker>
     </defs>
-    <line x1="${sx(-0.05*L)}" x2="${sx(Lb*1.02)}" y1="${cy}" y2="${cy}" stroke="var(--muted)" stroke-dasharray="14 4 2 4" stroke-width="1"/>
+    <line x1="${sx(-0.05*L)}" x2="${sx(Lb*1.02)}" y1="${cy}" y2="${cy}" stroke="var(--muted)" stroke-dasharray="14 4 2 4"/>
     <path d="${bolt}" fill="url(#boltG)" stroke="var(--macho-stroke)" stroke-width="1.4" stroke-linejoin="round"/>
-    <g stroke="var(--macho-stroke)" stroke-opacity=".35" stroke-width="1">${helix}</g>
-    <path d="${nut}" fill="var(--femea-fill)" stroke="none"/>
+    <g stroke="var(--macho-stroke)" stroke-opacity=".35">${helix}</g>
+    <path d="${nut}" fill="var(--femea-fill)"/>
     <path d="${nut}" fill="url(#hatch2)" stroke="var(--femea-stroke)" stroke-width="1.4" stroke-linejoin="round"/>
     <line x1="${dimX}" x2="${dimX}" y1="${yT(d/2)}" y2="${yB(d/2)}" stroke="var(--dim)" marker-start="url(#ar2)" marker-end="url(#ar2)"/>
     <text class="svg-t" x="${dimX-8}" y="${cy+4}" text-anchor="end">Ø${fmtIn(d)}</text>
     <text class="svg-t s" x="${sx(Lb)}" y="${Hmax-8}" text-anchor="end">${Math.round(L/P)} filetes · escala ${s>=1?fmt(s,1)+"×":"1:"+fmt(1/s,1)}</text>
-    <text class="svg-t s" x="${sx((nx0+nx1)/2)}" y="${yT(nutOut)-8}" text-anchor="middle">fêmea em corte</text>
   </svg>`;
-  document.getElementById("overSub").textContent = `M${fmtIn(d)} × ${fmtIn(P)} — proporção real entre diâmetro e passo`;
 }
 
-/* =====================================================================
-   RESUMO / CENÁRIOS
-   ===================================================================== */
-function statusChip(s){ const ic = s.status==="ok"?"✓":s.status==="warn"?"!":"✕"; return `<span class="st ${s.status}">${ic} ${esc(s.statusTxt)}</span>`; }
-function renderScenarios(r){
-  const el = document.getElementById("scen");
-  if (state.mode==="3d"){
-    document.getElementById("scenLabel").textContent = "Cenário";
-    const dotC = s => s.status==="ok" ? "var(--rzk-niquel)" : s.status==="warn" ? "var(--rzk-escarlate)" : "var(--rzk-bordo)";
-    el.innerHTML = r.sc.map(s=>`
-      <button data-view="p${s.i}" class="${state.v3==="p"+s.i?"on":""}" title="${esc(s.statusTxt)}">
-        <span class="dot" style="background:${dotC(s)}"></span><span>Erro <b>${fmtIn(s.err)}</b> · k ${s.kl}</span></button>`).join("");
-  } else {
-    document.getElementById("scenLabel").textContent = "Modelo CAD";
-    el.innerHTML = `
-      <button data-view="u-max" class="${state.vu==="u-max"?"on":""}"><span class="dot" style="background:var(--rzk-titanio)"></span><span>Matéria máxima</span></button>
-      <button data-view="u-mid" class="${state.vu==="u-mid"?"on":""}"><span class="dot" style="background:var(--rzk-niquel)"></span><span>Meio da tolerância</span></button>`;
-  }
-}
-function stat(k, v, unit, sub){ return `<div class="stat"><div class="k">${k}</div><div class="v">${v}${unit?`<small>${unit}</small>`:""}</div>${sub?`<div class="s">${sub}</div>`:""}</div>`; }
-function renderStats(r){
-  const {m,u,sc} = r;
-  let h = "";
-  if (state.mode==="3d"){
-    const s = sc[+state.v3.slice(1)] || sc[0];
-    h = stat("δ radial na fêmea", fmt(s.delta), "mm", `g = ${fmt(s.g)} mm no flanco`)
-      + stat("Ø do furo (D1 + 2δ)", fmt(m.D1 + 2*s.delta), "mm", `nominal ${fmt(m.D1)} mm`)
-      + stat("Jogo axial total", fmt(s.axial), "mm", "2·δ·tan30°")
-      + `<div class="stat"><div class="k">Engajamento radial</div><div class="v">${fmt(s.eng)}<small>mm</small></div><div class="s" style="margin-top:4px">${statusChip(s)}</div></div>`;
-  } else {
-    const mid = state.vu === "u-mid";
-    h = `<div class="stat"><div class="k">Ajuste</div><div class="v">${esc(desigF())}/${esc(desigM())}</div><div class="s" style="margin-top:4px">${fitChip(u.fitType)}</div></div>`
-      + stat("Ajuste no Ø médio (mín … máx)", `${sgn(u.fitMin)}${fmt(u.fitMin)} … ${sgn(u.fitMax)}${fmt(u.fitMax)}`, "mm", "+ folga · − interferência")
-      + stat(mid?"d2 macho (meio)":"d2 macho (máx.)", fmt(mid?u.mI6:u.mE6), "mm", `es ${isNum(u.esUm)?sgn(u.esUm)+fmtUm(u.esUm)+" µm":esc(u.esUm)} · Td2 ${fmtUm(u.Td2Um)} µm`)
-      + stat(mid?"D2 fêmea (meio)":"D2 fêmea (mín.)", fmt(mid?2*u.fI7:u.D2min), "mm", `EI ${isNum(u.EIUm)?sgn(u.EIUm)+fmtUm(u.EIUm)+" µm":esc(u.EIUm)} · TD2 ${fmtUm(u.TD2Um)} µm`);
-  }
-  document.getElementById("stats").innerHTML = h;
-}
-function renderFitBox(r){
-  const u = r.u;
-  document.getElementById("fitBox").innerHTML = `
-    <div class="ln"><span>Designação</span><b>${esc(desigF())}/${esc(desigM())}</b></div>
-    <div class="ln"><span>Tipo</span>${fitChip(u.fitType)}</div>
-    <div class="ln"><span>Mín. no Ø médio (EI − es)</span><b>${sgn(u.fitMin)}${fmt(u.fitMin)} mm</b></div>
-    <div class="ln"><span>Máx. no Ø médio</span><b>${sgn(u.fitMax)}${fmt(u.fitMax)} mm</b></div>
-    <div class="hint" style="margin:2px 0 0">Valor negativo = interferência.</div>`;
-  document.getElementById("bFit").textContent = FIT[u.fitType].t.replace("Com ","");
-}
-
-/* =====================================================================
-   ABAS
-   ===================================================================== */
-const ROW_DESC_M = ["Passo P","Diâmetro da extrusão = d","Raio do cilindro = d/2","Diâmetro da hélice = d2","Raio da hélice = d2/2","Altura da linha da hélice ao topo = H/2","Diâmetro do círculo = 2 × Rre","Ângulo do perfil (constante)","Recuo da hélice a partir da face = P"];
-const ROW_DESC_F = ["Passo P","Diâmetro da hélice = D1","Diâmetro do furo = D1","Raio do furo/hélice = D1/2","Raio do diâmetro médio = d2/2","Altura = H/2","Diâmetro pequeno = P/8","Ângulo do perfil (constante)","Recuo da hélice a partir da face = P"];
-
-/* seção recolhível que lembra o estado */
-function fold(id, title, sub, content, defOpen=true){
-  const open = state.col[id] ?? defOpen;
-  return `<details class="fold" data-fold="${id}" ${open?"open":""}><summary><h3>${title}</h3>${sub?`<span class="d">${sub}</span>`:""}<span class="chev">${CHEV}</span></summary>${content}</details>`;
-}
-function scenHeaders(r){
-  return r.sc.map(s=>`<th class="r clickable ${state.v3==="p"+s.i?"sel":""}" data-view="p${s.i}" title="Visualizar este cenário">Erro ${fmtIn(s.err)} mm · k ${s.kl}</th>`).join("");
-}
-function refImgs(id, a, b, title){
-  return fold(id, "Referência CAD", `${title} · exemplo M15 × 0,75 da planilha; cotas numeradas = coluna Nº`,
-    `<div class="ref-imgs"><img loading="lazy" src="assets/${a}" alt="Esboço com cotas numeradas"><img loading="lazy" src="assets/${b}" alt="Esquema 2D"></div>`, false);
-}
-function notes(id, list){ return fold(id, "Notas", "", `<ul class="notes">${list.map(n=>`<li>${n}</li>`).join("")}</ul>`, false); }
-function kvItem(l, v, em, copy){ const c = copy!==undefined ? copy : v; return `<div class="it ${em?"em":""}"><span class="l">${l}</span><span class="v" data-copy="${esc(c)}">${v}</span></div>`; }
-function umOrTxt(v){ return isNum(v) ? fmtUm(v)+" µm" : esc(v ?? "—"); }
-const umSigned = v => isNum(v) ? sgn(v)+fmtUm(v)+" µm" : esc(v);
-
-function tabMetrica(r){
-  const m = r.m;
-  const items = [
-    ["P","Passo","entrada",m.P,"mm",true],["d","Ø nominal","entrada",m.d,"mm",true],
-    ["d1","Ø menor do macho","d − 1,2268·P",m.d1,"mm"],["he","Altura do filete externo","0,61343·P",m.he,"mm"],
-    ["Rre","Raio do fundo externo","0,14434·P",m.Rre,"mm"],["S","Seção resistente","d1² · 0,7854",m.S,"mm²"],
-    ["D","Ø maior da fêmea","d + 2a",m.D,"mm"],["D1","Ø menor da fêmea","d − 1,0825·P",m.D1,"mm"],
-    ["hi","Altura do filete interno","0,5413·P + a",m.hi,"mm"],["Rri","Raio do fundo interno","0,073·P",m.Rri,"mm"],
-    ["d2 = D2","Ø médio (flancos)","d − 0,64953·P",m.d2,"mm"],["a","Folga de fundo","0,036·P",m.a,"mm"],
-    ["H","Triângulo fundamental","0,86603·P",m.H,"mm"],["H/8","","H / 8",m.H8,"mm"],["H/4","","H / 4",m.H4,"mm"],["H/6","","H / 6",m.H6,"mm"],
-  ];
-  return `<div class="sec-title"><h3>Rosca métrica ISO</h3><span>dimensões básicas do perfil · clique para copiar</span></div>
-  <div class="fgrid">${items.map(([sym,nm,fx,v,u,inp])=>`
-    <div class="fc ${inp?"input":""}" data-copy="${esc(fmt(v))}">
-      <div class="sym"><b>${sym}</b><span>${u}</span></div>
-      <div class="nm">${nm||"&nbsp;"}</div><div class="val">${fmt(v)}</div><div class="fx">${fx}</div>
-    </div>`).join("")}</div>`;
-}
-
-function tabM3d(r){
-  const m = r.m;
-  const vals = [m.P, m.d, m.d/2, m.d2, m.d2/2, m.H/2, 2*m.Rre, 60, m.P];
-  const rows = vals.map((v,i)=>`<tr><td class="idx">${i+1}</td><td class="desc">${ROW_DESC_M[i]}</td>${i===7?`<td class="num">60°</td>`:numTd(v)}<td><span class="tag">NÃO (nominal)</span></td>${r.sc.map(s=> i===7?`<td class="num ${state.v3==="p"+s.i?"sel":""}">60°</td>`:numTd(v, state.v3==="p"+s.i?"sel":"")).join("")}</tr>`).join("");
-  return `<div class="callout"><b>Macho = nominal.</b> Nenhuma cota do macho recebe folga: toda a folga vai na <b>fêmea</b> (aba “Fêmea 3D”).</div>
-  <div class="sec-title"><h3>Valores para o desenho 3D — rosca externa</h3><span>impressão 3D</span></div>
-  <div class="tbl-wrap"><table>
-    <thead><tr><th>Nº</th><th>Descrição</th><th class="r">Nominal (folga 0,0)</th><th>Aplicar folga?</th>${scenHeaders(r)}</tr></thead>
-    <tbody>${rows}</tbody></table></div>
-  ${fold("m3d-err","Erro da impressora","definido no painel lateral",`<div class="kv">
-    ${kvItem("Erro da impressora 1", fmt(state.e1)+" mm", false, fmt(state.e1))}
-    ${kvItem("Erro da impressora 2", fmt(state.e2)+" mm", false, fmt(state.e2))}
-    ${kvItem("Fator k mínimo (g = k × erro)", fmtIn(state.k1), false)}
-    ${kvItem("Fator k máximo", fmtIn(state.k2), false)}</div>`)}
-  ${notes("m3d-notes",[
-    "O macho é o gabarito: mantém d, d2, Rre e o perfil nominais, e pode ser conferido com paquímetro.",
-    "Se preferir dividir a folga: subtraia δ/2 das cotas 2 e 3 (Ø e raio do cilindro) e 4 e 5 (Ø e raio da hélice) do macho, e use δ/2 na fêmea. Para o valor de δ, veja a aba “Fêmea 3D”.",
-    "A hélice começa P fora da face (cota 9) para o corte sair limpo na entrada da rosca."
-  ])}
-  ${refImgs("m3d-ref","macho-cotas.png","macho-3d-esquema.png","rosca externa")}`;
-}
-
-function tabF3d(r){
-  const m = r.m;
-  const def = [
-    [m.P, ()=>m.P, false, "NÃO (nominal)"],
-    [m.D1, d=>m.D1+2*d, true, "SIM: + 2δ (diâmetro)"],
-    [m.D1, d=>m.D1+2*d, true, "SIM: + 2δ (diâmetro)"],
-    [m.D1/2, d=>m.D1/2+d, true, "SIM: + δ (raio)"],
-    [m.d2/2, d=>m.d2/2+d, true, "SIM: + δ (raio)"],
-    [m.H/2, ()=>m.H/2, false, "NÃO (nominal)"],
-    [m.P/8, ()=>m.P/8, false, "NÃO (nominal)"],
-    [60, ()=>60, false, "NÃO (nominal)"],
-    [m.P, ()=>m.P, false, "NÃO (nominal)"],
-  ];
-  const sel = s => state.v3==="p"+s.i?"sel":"";
-  const rows = def.map(([nom,fn,yes,tag],i)=>`<tr class="${yes?"yes":""}"><td class="idx">${i+1}</td><td class="desc">${ROW_DESC_F[i]}</td>${i===7?`<td class="num">60°</td>`:numTd(nom)}<td><span class="tag ${yes?"yes":""}">${tag}</span></td>${r.sc.map(s=> i===7?`<td class="num ${sel(s)}">60°</td>`:numTd(fn(s.delta), sel(s))).join("")}</tr>`).join("");
-  const calcRows = [
-    ["Folga real no flanco g = k × erro", s=>s.g],
-    ["δ radial a aplicar = 2 × g", s=>s.delta],
-    ["Jogo axial total = 2·δ·tan30°", s=>s.axial],
-    ["Aumento do Ø do furo = 2δ", s=>s.holeInc],
-    ["Engajamento radial restante = 0,5413·P − δ", s=>s.eng],
-  ].map(([l,fn])=>`<tr><td class="desc">${l} <span class="muted">(mm)</span></td>${r.sc.map(s=>numTd(fn(s), sel(s))).join("")}</tr>`).join("")
-   + `<tr><td class="desc">Avaliação <span class="muted">(indicativa, limite 0,2 mm)</span></td>${r.sc.map(s=>`<td class="r ${sel(s)}">${statusChip(s)}</td>`).join("")}</tr>`;
-  return `<div class="sec-title"><h3>Valores para o desenho 3D — rosca interna</h3><span>folga pelo erro da impressora · linhas em destaque recebem δ</span></div>
-  <div class="tbl-wrap"><table>
-    <thead><tr><th>Nº</th><th>Descrição</th><th class="r">Nominal (folga 0,0)</th><th>Aplicar folga?</th>${scenHeaders(r)}</tr></thead>
-    <tbody>${rows}</tbody></table></div>
-  ${fold("f3d-calc","Cálculo da folga","δ = deslocamento radial do perfil da fêmea para fora",`<div class="tbl-wrap"><table>
-    <thead><tr><th>Grandeza</th>${scenHeaders(r)}</tr></thead><tbody>${calcRows}</tbody></table></div>`)}
-  ${notes("f3d-notes",[
-    "Erro da impressora = desvio típico (±) das peças impressas. A folga real no flanco é g = k × erro (k de 1,0 a 1,5). Como os flancos têm 30° da vertical, deslocar o perfil δ na radial dá só δ/2 de folga no flanco; por isso δ = 2g.",
-    "Aplique δ somente nas cotas marcadas “SIM”: Ø hélice (2), Ø furo (3), raio D1/2 (4) e raio d2/2 (5). P, H/2, P/8, 60° e o recuo (9) ficam nominais.",
-    "Veja a linha “Avaliação”: com erro 0,2 mm e P = 0,75 o perfil quase some. Nesse caso aumente o passo (por exemplo P ≥ 1,5 mm) antes de aumentar a folga.",
-    "O macho fica NOMINAL (gabarito). Alternativa: dividir a folga, fêmea + δ/2 e macho − δ/2 nas cotas equivalentes (macho: 2, 3, 4 e 5, subtraindo).",
-    "Valores práticos de projeto, não normativos (a ISO 965 não cobre impressão 3D). Imprima antes um trecho curto (3 a 4 voltas) e ajuste k."
-  ])}
-  ${refImgs("f3d-ref","femea-cotas.png","femea-3d-esquema.png","rosca interna")}`;
-}
-
-function fitSection(r, id){
-  const u = r.u;
-  return fold(id, "Ajuste macho × fêmea", "no Ø médio · + folga / − interferência", `<div class="kv one">
-    ${kvItem("Ajuste", `${esc(desigF())}/${esc(desigM())} · ${FIT[u.fitType].t}`, true, `${desigF()}/${desigM()}`)}
-    ${kvItem("Mínimo = D2 mín − d2 máx = EI − es", sgn(u.fitMin)+fmt(u.fitMin)+" mm", true, fmt(u.fitMin))}
-    ${kvItem("Máximo = D2 máx − d2 mín", sgn(u.fitMax)+fmt(u.fitMax)+" mm", false, fmt(u.fitMax))}
-    ${kvItem("Mínimo perpendicular ao flanco ≈ mín/4", sgn(u.folgaFlanco)+fmt(u.folgaFlanco)+" mm", false, fmt(u.folgaFlanco))}
-    ${kvItem("Jogo axial mínimo = mín·tan30°", sgn(u.jogoAxial)+fmt(u.jogoAxial)+" mm", false, fmt(u.jogoAxial))}
-  </div>`);
-}
-
-function tabMus(r){
-  const {m,u} = r, ms = state.ms;
-  const selE = state.vu==="u-max" ? "sel" : "", selI = state.vu==="u-mid" ? "sel" : "";
-  const R = (i, nom, tag, yes, E, F, G, H, I) => `<tr class="${yes?"yes":""}"><td class="idx">${i}</td><td class="desc">${ROW_DESC_M[i-1]}</td>${i===8?`<td class="num">60°</td>`:numTd(nom)}<td><span class="tag ${yes?"yes":""}">${tag}</span></td>${i===8?`<td class="num ${selE}">60°</td>`:numTd(E,selE)}${F==null?"<td></td>":numTd(F)}${G==null?"<td></td>":numTd(G)}${H==null?"<td></td>":numTd(H)}${i===8?`<td class="num ${selI}">60°</td>`:numTd(I,selI)}</tr>`;
-  const rows = [
-    R(1,m.P,"NÃO (nominal)",false,m.P,null,null,null,m.P),
-    R(2,m.d,"SIM: + es (Ø)",true,u.mE4,u.mF4,u.mG4,u.mH4,u.mI4),
-    R(3,m.d/2,"SIM: + es/2 (raio)",true,u.mE5,null,null,null,u.mI5),
-    R(4,m.d2,"SIM: + es (Ø)",true,u.mE6,u.mF6,u.mG6,u.mH6,u.mI6),
-    R(5,m.d2/2,"SIM: + es/2 (raio)",true,u.mE7,null,null,null,u.mI7),
-    R(6,m.H/2,"NÃO (nominal)",false,m.H/2,null,null,null,m.H/2),
-    R(7,2*m.Rre,"NÃO (nominal)",false,2*m.Rre,null,null,null,2*m.Rre),
-    R(8,60,"NÃO (nominal)",false,60,null,null,null,60),
-    R(9,m.P,"NÃO (nominal)",false,m.P,null,null,null,m.P),
-  ].join("");
-  const custom = ms.pos==="c";
-  return `<div class="callout">Macho <b>${esc(desigM())}</b> com desvio <b>es ${umSigned(u.esUm)}</b>${custom?" (personalizado)":""} · fêmea <b>${esc(desigF())}</b> · ${fitChip(u.fitType)}. Altere as classes no painel lateral.</div>
-  <div class="sec-title"><h3>Valores para o desenho 3D — rosca externa</h3><span>usinagem · clique nos cabeçalhos CAD para visualizar</span></div>
-  <div class="tbl-wrap"><table>
-    <thead><tr><th>Nº</th><th>Descrição</th><th class="r">Nominal</th><th>Aplicar desvio es?</th>
-      <th class="r clickable ${selE}" data-view="u-max">CAD: matéria máx.<br><span class="muted" style="font-weight:400">nominal + es</span></th>
-      <th class="r">Tolerância T</th><th class="r">Mínimo</th><th class="r">Máximo</th>
-      <th class="r clickable ${selI}" data-view="u-mid">CAD: meio da tol.</th></tr></thead>
-    <tbody>${rows}</tbody></table></div>
-  <div class="grid2">
-    <div>
-      ${fold("mus-calc","Cálculos","",`<div class="kv one">
-        ${kvItem("Classe do macho", esc(desigM()), true)}
-        ${kvItem("Desvio fundamental es", umSigned(u.esUm), true, isNum(u.esUm)?fmtUm(u.esUm):"")}
-        ${kvItem("Origem do es", esc(u.esOrig||"—"), false)}
-        ${kvItem("Desvio es (mm)", fmt(u.es), false)}
-        ${kvItem("Td(6): tolerância do Ø maior (tabela)", umOrTxt(u.Td6), false, isNum(u.Td6)?fmtUm(u.Td6):"")}
-        ${kvItem(`Td(${ms.gd}) usado ${ms.gd!==6?`= R40(${fmtIn(F_TDE[ms.gd])} × Td(6))`:""}`, umOrTxt(u.TdUm), true, fmtUm(u.TdUm))}
-        ${kvItem("Faixa de diâmetro ISO 965-1 (nº)", u.faixa ?? "fora da faixa", false)}
-        ${kvItem("Ø médio geométrico da faixa dg", fmt(u.dg)+" mm", false, fmt(u.dg))}
-        ${kvItem("Td2(6) tabelado ISO", umOrTxt(u.Td2Tab), false, isNum(u.Td2Tab)?fmtUm(u.Td2Tab):"")}
-        ${kvItem("Td2(6) fórmula = 90·P^0,4·dg^0,1", fmt(u.Td2F,2)+" µm", false, fmt(u.Td2F,2))}
-        ${kvItem("Td2(6) da fórmula arredondado R40", umOrTxt(u.Td2R), false, fmtUm(u.Td2R))}
-        ${kvItem("Td2(6) base", umOrTxt(u.Td2_6), false, fmtUm(u.Td2_6))}
-        ${kvItem("Origem do Td2(6)", esc(u.Td2Orig), false)}
-        ${kvItem(`Td2(${ms.g2}) usado ${ms.g2!==6?`= R40(${fmtIn(F_TD2E[ms.g2])} × Td2(6))`:""}`, umOrTxt(u.Td2Um), true, fmtUm(u.Td2Um))}
-        ${kvItem("Td2: tolerância do Ø médio (mm)", fmt(u.Td2)+" mm", false, fmt(u.Td2))}
-      </div>`)}
-    </div>
-    <div>
-      ${fitSection(r,"mus-fit")}
-      ${notes("mus-notes",[
-        "Ajuste padrão 6H/6g (ISO 965-1): fêmea com EI = 0 (cotas nominais) e macho com desvio es negativo. A folga mínima no Ø médio vale EI − es.",
-        "Para modelar no CAD use a coluna “matéria máx.” (nominal + es) ou “meio da tol.”. A peça usinada pode variar entre Mínimo e Máximo.",
-        "Raios não têm tolerância própria: use a do diâmetro (colunas T, Mínimo e Máximo só nas linhas de Ø).",
-        "es, Td(6) e Td2(6) vêm da tabela ISO 965-1. Outros graus usam os fatores da norma (Td2: 3 = 0,5 · 4 = 0,63 · 5 = 0,8 · 7 = 1,25 · 8 = 1,6 · 9 = 2,0; Td: 4 = 0,63 · 8 = 1,6) com arredondamento R40.",
-        "Ajuste fino: graus 3, 4 ou 5 (ex.: 4h, 5h4h, 3h4h). Ajuste com interferência não é coberto pela ISO 965-1: use “pers.” com es positivo (macho maior) ou EI negativo na fêmea. Referência normativa para roscas com interferência: ASME B1.12 (classe 5, polegada)."
-      ])}
-    </div>
-  </div>
-  ${refImgs("mus-ref","macho-cotas.png","macho-usinagem-esquema.png","rosca externa, usinagem")}`;
-}
-
-function tabFus(r){
-  const {m,u} = r, fs = state.fs;
-  const selE = state.vu==="u-max" ? "sel" : "", selI = state.vu==="u-mid" ? "sel" : "";
-  const shifted = !eq(u.EI, 0);
-  const tg = shifted ? `SIM: + EI` : "NÃO (EI = 0)";
-  const R = (i, nom, yes, tag, E, F, G, H, I) => `<tr class="${yes?"yes":""}"><td class="idx">${i}</td><td class="desc">${ROW_DESC_F[i-1]}</td>${i===8?`<td class="num">60°</td>`:numTd(nom)}<td><span class="tag ${yes?"yes":""}">${tag}</span></td>${i===8?`<td class="num ${selE}">60°</td>`:numTd(E,selE)}${F==null?"<td></td>":numTd(F)}${G==null?"<td></td>":numTd(G)}${H==null?"<td></td>":numTd(H)}${i===8?`<td class="num ${selI}">60°</td>`:numTd(I,selI)}</tr>`;
-  const rows = [
-    R(1,m.P,false,"NÃO",m.P,null,null,null,m.P),
-    R(2,m.D1,shifted,shifted?tg+" (Ø)":tg,u.fE4,u.fF4,u.fG4,u.fH4,u.fI4),
-    R(3,m.D1,shifted,shifted?tg+" (Ø)":tg,u.fE4,u.fF4,u.fG4,u.fH4,u.fI4),
-    R(4,m.D1/2,shifted,shifted?"SIM: + EI/2 (raio)":tg,u.fE6,null,null,null,u.fI6),
-    R(5,m.d2/2,shifted,shifted?"SIM: + EI/2 (raio)":tg,u.fE7,null,null,null,u.fI7),
-    R(6,m.H/2,false,"NÃO",m.H/2,null,null,null,m.H/2),
-    R(7,m.P/8,false,"NÃO",m.P/8,null,null,null,m.P/8),
-    R(8,60,false,"NÃO",60,null,null,null,60),
-    R(9,m.P,false,"NÃO",m.P,null,null,null,m.P),
-  ].join("");
-  return `<div class="callout">Fêmea <b>${esc(desigF())}</b> com desvio <b>EI ${umSigned(u.EIUm)}</b>${fs.pos==="c"?" (personalizado)":""} · macho <b>${esc(desigM())}</b> · ${fitChip(u.fitType)}.</div>
-  <div class="sec-title"><h3>Valores para o desenho 3D — rosca interna</h3><span>usinagem · ISO 965-1</span></div>
-  <div class="tbl-wrap"><table>
-    <thead><tr><th>Nº</th><th>Descrição</th><th class="r">Nominal</th><th>Aplicar desvio EI?</th>
-      <th class="r clickable ${selE}" data-view="u-max">CAD: matéria máx.<br><span class="muted" style="font-weight:400">mínimo = nominal + EI</span></th>
-      <th class="r">Tolerância T</th><th class="r">Mínimo</th><th class="r">Máximo</th>
-      <th class="r clickable ${selI}" data-view="u-mid">CAD: meio da tol.</th></tr></thead>
-    <tbody>${rows}</tbody></table></div>
-  <div class="grid2">
-    <div>
-      ${fold("fus-calc","Cálculos","",`<div class="kv one">
-        ${kvItem("Classe da fêmea", esc(desigF()), true)}
-        ${kvItem("Desvio fundamental EI", umSigned(u.EIUm), true, isNum(u.EIUm)?fmtUm(u.EIUm):"")}
-        ${kvItem("Origem do EI", esc(u.EIOrig||"—"), false)}
-        ${kvItem("TD1(6): tolerância do Ø menor (tabela)", umOrTxt(u.TD1_6), false, isNum(u.TD1_6)?fmtUm(u.TD1_6):"")}
-        ${kvItem(`TD1(${fs.g1}) usado ${fs.g1!==6?`= R40(${fmtIn(F_TD1[fs.g1])} × TD1(6))`:""}`, umOrTxt(u.TD1Um), true, fmtUm(u.TD1Um))}
-        ${kvItem("Faixa de diâmetro ISO 965-1 (nº)", u.faixa ?? "fora da faixa", false)}
-        ${kvItem("Ø médio geométrico da faixa dg", fmt(u.dg)+" mm", false, fmt(u.dg))}
-        ${kvItem("TD2(6) tabelado ISO", umOrTxt(u.TD2Tab), false, isNum(u.TD2Tab)?fmtUm(u.TD2Tab):"")}
-        ${kvItem("TD2(6) fórmula = 1,32 × Td2(6)", fmt(u.TD2F,2)+" µm", false, fmt(u.TD2F,2))}
-        ${kvItem("TD2(6) da fórmula arredondado R40", umOrTxt(u.TD2R), false, fmtUm(u.TD2R))}
-        ${kvItem("Origem do TD2(6)", esc(u.TD2Orig), false)}
-        ${kvItem(`TD2(${fs.g2}) usado ${fs.g2!==6?`= R40(${fmtIn(F_TD2I[fs.g2])} × Td2(6))`:""}`, umOrTxt(u.TD2Um), true, fmtUm(u.TD2Um))}
-        ${kvItem("TD2: tolerância do Ø médio (mm)", fmt(u.TD2)+" mm", false, fmt(u.TD2))}
-      </div>`)}
-    </div>
-    <div>
-      ${fold("fus-lim",`Limites da fêmea ${esc(desigF())}`,"mm",`<div class="kv one">
-        ${kvItem("Ø menor D1: mínimo", fmt(u.D1min), false)}
-        ${kvItem("Ø menor D1: máximo", fmt(u.D1max), true)}
-        ${kvItem("Ø médio D2: mínimo", fmt(u.D2min), false)}
-        ${kvItem("Ø médio D2: máximo", fmt(u.D2max), true)}
-        ${kvItem("Ø maior D: mínimo", fmt(u.Dmin), false)}
-      </div>`)}
-      ${fitSection(r,"fus-fit")}
-      ${notes("fus-notes",[
-        "Fêmea H: EI = 0, nenhuma cota recebe desvio. Fêmea G: EI positivo (igual a |es| da posição g), aumenta D1 e D2 — útil para revestimento ou mais folga.",
-        "A tolerância TD1 vale para o Ø menor (furo, cotas 2 e 3) e TD2 para o Ø médio (cota 5 é o raio da hélice).",
-        "Graus diferentes de 6 usam os fatores da ISO 965-1 com arredondamento R40 (TD1: 4 = 0,63 · 5 = 0,8 · 7 = 1,25 · 8 = 1,6; TD2 = k × Td2(6): 4 = 0,85 · 5 = 1,06 · 6 = 1,32 · 7 = 1,7 · 8 = 2,12).",
-        "No “meio da tol.” o raio do Ø médio (cota 5) agora inclui EI e TD2/2. Na planilha v17 ele ficava nominal, o que só coincide quando EI = 0 e a cota é tomada no limite mínimo.",
-        "Ajuste com interferência não é coberto pela ISO 965-1: use “pers.” com EI negativo (furo menor) ou es positivo no macho."
-      ])}
-    </div>
-  </div>
-  ${refImgs("fus-ref","femea-cotas.png","femea-usinagem-esquema.png","rosca interna, usinagem")}`;
-}
-
-function tabIso(r){
-  const {m,u} = r;
-  const cv = v => v==null ? '<span class="muted">—</span>' : v;
-  const ci = CLS_COL[state.ms.pos];
-  const p = ISO_P.map(row=>{
-    const on = eq(row[0], m.P);
-    return `<tr class="${on?"hl":""}"><td class="mono">${fmtIn(row[0])}</td>${[1,2,3].map(c=>`<td class="r mono ${on&&(c===ci||(c===1&&state.fs.pos==="G"))?"hl":""}">${cv(row[c])}</td>`).join("")}<td class="r mono">${row[4]}</td><td class="r mono">${cv(row[5])}</td></tr>`;
-  }).join("");
-  const fx = FAIXAS.map((f,i)=>`<tr class="${u.faixa===i+1?"hl":""}"><td class="mono">${i+1}</td><td class="r mono">${fmtIn(f[0])}</td><td class="r mono">${fmtIn(f[1])}</td><td class="r mono">${fmt(Math.sqrt(f[0]*f[1]))}</td></tr>`).join("");
-  const kt = TD2_TAB.map(row=>`<tr class="${u.keyRow===row?"hl":""}"><td class="mono">${row[0]}</td><td class="mono">${fmtIn(row[1])}</td><td class="mono muted">${row[0]*1000+Math.round(row[1]*100)}</td><td class="r mono">${row[2]}</td><td class="r mono">${cv(row[3])}</td></tr>`).join("");
-  const used = [u.Td2Um,u.TD2Um,u.TdUm,u.TD1Um];
-  const r40 = R40.map(v=>`<span class="${used.includes(v)?"hl":""}">${v}</span>`).join("");
-  // graus para a rosca atual
-  const gv = (f, base, n, is6val) => (f[n]==null) ? null : (n===6 ? is6val : (isNum(base) ? r40Round(f[n]*base) : null));
-  const gr = [3,4,5,6,7,8,9].map(n=>{
-    const a = gv(F_TD2E, u.Td2_6, n, u.Td2_6), b = gv(F_TDE, u.Td6, n, u.Td6), c = gv(F_TD2I, u.Td2_6, n, u.TD2_6), d1 = gv(F_TD1, u.TD1_6, n, u.TD1_6);
-    const c2 = (x, on) => `<td class="r mono ${on?"hl":""}">${x==null?'<span class="muted">—</span>':x}</td>`;
-    return `<tr><td class="mono">${n}</td>${c2(a, n===state.ms.g2)}${c2(b, n===state.ms.gd)}${c2(c, n===state.fs.g2)}${c2(d1, n===state.fs.g1)}</tr>`;
-  }).join("");
-  return `<div class="callout">Dados ISO 965-1 (µm) usados nas abas de usinagem. Fonte: tabelas da ISO 965-1 publicadas em machiningdoctor.com; <b>conferir na norma para tolerância crítica.</b> Destaques = valores usados para M${fmtIn(m.d)} × ${fmtIn(m.P)}, ${esc(desigF())}/${esc(desigM())}.</div>
-  <div class="sec-title"><h3>Tolerâncias por grau para esta rosca</h3><span>µm · grau 6 da tabela; demais = R40(fator × grau 6)</span></div>
-  <div class="tbl-wrap"><table>
-    <thead><tr><th>Grau</th><th class="r">Td2 macho</th><th class="r">Td macho</th><th class="r">TD2 fêmea</th><th class="r">TD1 fêmea</th></tr></thead>
-    <tbody>${gr}</tbody></table></div>
-  <div class="grid2">
-    <div>
-      ${fold("iso-p","Desvios e tolerâncias por passo","es (valor absoluto, negativo na norma) · EI(G) = +es(g)",`<div class="tbl-wrap"><table>
-        <thead><tr><th>P (mm)</th><th class="r">g / G</th><th class="r">f</th><th class="r">e</th><th class="r">Td(6)</th><th class="r">TD1(6)</th></tr></thead>
-        <tbody>${p}</tbody></table></div>`)}
-    </div>
-    <div>
-      ${fold("iso-fx","Faixas de diâmetro","dg = √(mín · máx)",`<div class="tbl-wrap"><table>
-        <thead><tr><th>Nº</th><th class="r">d &gt; (mm)</th><th class="r">até (mm)</th><th class="r">dg</th></tr></thead>
-        <tbody>${fx}</tbody></table></div>`)}
-      ${fold("iso-r40","Série R40","µm · arredondamento",`<div class="r40">${r40}</div>`)}
-    </div>
-  </div>
-  ${fold("iso-td2","Td2(6) e TD2(6) por faixa e passo","fora da tabela → fórmula 90·P^0,4·dg^0,1",`<div class="tbl-wrap" style="max-height:420px;overflow:auto"><table>
-    <thead><tr><th>Faixa</th><th>P (mm)</th><th>Chave</th><th class="r">Td2(6)</th><th class="r">TD2(6)</th></tr></thead>
-    <tbody>${kt}</tbody></table></div>`, false)}`;
-}
-
-/* ---------- Aba Info ---------- */
-/* Esboço do perfil de corte do macho com as cotas 1–9 (igual ao esboço CAD da planilha) */
+/* Esboço do perfil de corte do macho (cotas 1–9 das tabelas / CAD da planilha) */
 function machoSketch(r){
-  const {m} = r, P = m.P;
-  const mc = viewGeom(r, curView()).macho;
+  const {m, cad} = r, P = m.P;
+  const mc = cad.mg;
   const rp = mc.rp, rc = mc.rc, R = mc.R, H2 = m.H/2;
   const rTopL = rp + H2, rApex = rp - H2, rho = 1.2*P;
   const W = 1000, gut = 270, padL = 16, plotW = W - gut - padL;
@@ -1259,13 +914,10 @@ function machoSketch(r){
   const badge = (x,y,n) => `<g><circle cx="${x}" cy="${y}" r="11" fill="var(--accent)"/><text x="${x}" y="${y+4}" text-anchor="middle" style="font:600 11.5px Poppins,sans-serif;fill:#fff">${n}</text></g>`;
   const dimH = (x0,x1,y,txt,n) => `<line x1="${x0}" x2="${x1}" y1="${y}" y2="${y}" stroke="var(--dim)" marker-start="url(#arS)" marker-end="url(#arS)"/>
     <text class="svg-t" text-anchor="middle" x="${(x0+x1)/2}" y="${y-8}">${txt}</text>${badge((x0+x1)/2 + txt.length*4.2 + 18, y-12, n)}`;
-  // perfil de corte, como no esboço CAD: contorno sólido fechado na linha d/2 (rente ao topo do cilindro);
-  // a linha de largura P a H/2 acima da hélice é só construção (traço-ponto)
-  const hw = (P/2)*(rc - rApex)/m.H;            // meia-largura do triângulo na altura d/2
+  const hw = (P/2)*(rc - rApex)/m.H;
   const groove = `M${sx(xc-hw)} ${sy(rc)} L${sx(xc-u)} ${sy(rC-R/2)} A${R*s} ${R*s} 0 0 0 ${sx(xc+u)} ${sy(rC-R/2)} L${sx(xc+hw)} ${sy(rc)} Z`;
   const constr = `<line x1="${sx(xc-P/2)}" x2="${sx(xc+P/2)}" y1="${sy(rTopL)}" y2="${sy(rTopL)}" stroke="var(--accent)" stroke-width="1.3" stroke-dasharray="10 4 2 4"/>
     <circle cx="${sx(xc-P/2)}" cy="${sy(rTopL)}" r="2.5" fill="var(--accent)"/><circle cx="${sx(xc+P/2)}" cy="${sy(rTopL)}" r="2.5" fill="var(--accent)"/>`;
-  // prolongamento dos flancos: o triângulo fundamental tem altura H (vértice → linha de largura P)
   const ext = (m.H+0.3*P)/m.H;
   const exL = [xc - (P/2)*ext, rApex + m.H*ext], exR = [xc + (P/2)*ext, rApex + m.H*ext];
   const a1 = [xc + rho*Math.cos(2*Math.PI/3), rApex + rho*Math.sin(2*Math.PI/3)], a2 = [xc + rho*Math.cos(Math.PI/3), rApex + rho*Math.sin(Math.PI/3)];
@@ -1304,172 +956,441 @@ function machoSketch(r){
   </svg>`;
 }
 
-function tabInfo(r){
+/* =====================================================================
+   ABAS — auxiliares
+   ===================================================================== */
+function fold(id, title, sub, content, defOpen=true){
+  const open = state.col[id] ?? defOpen;
+  return `<details class="fold" data-fold="${id}" ${open?"open":""}><summary><h3>${title}</h3>${sub?`<span class="d">${sub}</span>`:""}<span class="chev">${CHEV}</span></summary>${content}</details>`;
+}
+function notes(id, list){ return fold(id, "Notas", "", `<ul class="notes">${list.map(n=>`<li>${n}</li>`).join("")}</ul>`, false); }
+function kvItem(l, v, em, copy, f){ const c = copy!==undefined ? copy : v; return `<div class="it ${em?"em":""}"><span class="l">${l}${f?`<small>${f}</small>`:""}</span><span class="v" data-copy="${esc(c)}">${v}</span></div>`; }
+const prow = (l, sub, v, unit, key) => `<div class="prow ${key?"key":""}" data-copy="${esc(v)}"><span class="l">${l}${sub?`<small>${sub}</small>`:""}</span><span class="v">${v}${unit?`<small>${unit}</small>`:""}</span></div>`;
+const modelSeg = () => `<div class="seg text" data-key="model"><button data-v="max" class="${state.model==="max"?"on":""}">CAD: matéria máxima</button><button data-v="mid" class="${state.model==="mid"?"on":""}">CAD: meio da tolerância</button></div>`;
+const posTxt = n => `+${n} ${n===1?"posição":"posições"}`;
+const modelName = () => state.model==="mid" ? "meio da tolerância" : "matéria máxima";
+
+/* =====================================================================
+   ABA RESULTADOS
+   ===================================================================== */
+function tabRes(r){
+  const {m,u,cad,p3,is3d} = r;
+  const ajuste = state.custom ? "Personalizado" : FITS[state.fit].nome;
+  const head = `<div class="res-head">
+      <div>
+        <div class="big">M${fmtIn(m.d)} × ${fmtIn(m.P)} · ${esc(desigFit())}</div>
+        <div class="hint" style="margin:2px 0 0">${MATS[state.mat].nome} · ajuste ${ajuste}${is3d?` · impressão 3D (erro ${fmt(p3.err)} mm)`:" · usinagem"}</div>
+      </div>
+      ${fitChip(u.fitType)} ${is3d?engChip(cad):""}
+      <div class="spacer"></div>
+      ${modelSeg()}
+    </div>`;
+  const legend = `<div class="legend">
+      <span><i class="sw m"></i>Macho (externo)</span>
+      <span><i class="sw f"></i>Fêmea (interno)${is3d?" com folga δ da impressora":""}</span>
+      <span><i class="sw p"></i>Ø médio nominal d2</span>
+      ${u.fitMin + 2*cad.dl < -1e-12 ? '<span><i class="sw i"></i>Interferência</span>' : ""}
+      <span class="muted">Escala real · valores do CAD em ${modelName()}</span>
+    </div>`;
+  const macho = `<div class="pcard"><h4><i class="sw m"></i>Macho · externo<small>${esc(desigM())}</small></h4>
+      ${prow("Ø eixo","diâmetro externo (crista)",fmt(2*cad.mCrest),"mm",true)}
+      ${prow("Passo","",fmt(m.P),"mm",true)}
+      ${prow("h filete","altura total do filete externo",fmt(cad.hExt),"mm",true)}
+      ${prow("R do fundo","raio da raiz",fmt(cad.mg.R),"mm",true)}
+      ${prow("Centro do R → linha de centro","distância radial do eixo ao centro do R",fmt(cad.mC),"mm",true)}
+      ${prow("Ø da hélice (d2)","diâmetro médio, referência dos flancos",fmt(2*cad.mg.rp),"mm")}
+      ${prow("Ângulo do perfil","","60°","")}
+      ${prow("Recuo da hélice","início P antes da face",fmt(m.P),"mm")}
+    </div>`;
+  const femea = `<div class="pcard"><h4><i class="sw f"></i>Fêmea · interno<small>${esc(desigF())}${is3d?` + δ ${fmt(cad.dl)}`:""}</small></h4>
+      ${prow("Ø furo","diâmetro do pré-furo (crista)",fmt(2*cad.fCrest),"mm",true)}
+      ${prow("Passo","",fmt(m.P),"mm",true)}
+      ${prow("h filete","altura total do filete interno",fmt(cad.hInt),"mm",true)}
+      ${prow("R do fundo","raio da raiz",fmt(cad.fg.R),"mm",true)}
+      ${prow("Centro do R → linha de centro","distância radial do eixo ao centro do R",fmt(cad.fC),"mm",true)}
+      ${prow("Ø da hélice (D2)","diâmetro médio, referência dos flancos",fmt(2*cad.fg.rp),"mm")}
+      ${prow("Ø fundo da rosca","diâmetro maior resultante",fmt(2*cad.fRoot),"mm")}
+      ${prow("Ângulo do perfil","","60°","")}
+    </div>`;
+
+  // ---------- desenvolvimento ----------
+  const mat = MATS[state.mat], fit = FITS[state.fit];
+  const matrix = `<div class="tbl-wrap"><table>
+      <thead><tr><th>Material \\ Ajuste</th>${Object.entries(FITS).map(([k,f])=>`<th class="c">${f.nome}</th>`).join("")}</tr></thead>
+      <tbody>${Object.entries(MATS).map(([mk,M])=>`<tr><td><b style="font-weight:500">${M.nome}</b> <span class="muted">${posTxt(M.shift)}</span></td>${Object.keys(FITS).map(fk=>{
+        const sg = suggested(mk,fk); const t = `${sg.fs.g2}${sg.fs.pos}/${sg.ms.g2===sg.ms.gd?sg.ms.g2+sg.ms.pos:sg.ms.g2+sg.ms.pos+sg.ms.gd+sg.ms.pos}`;
+        return `<td class="c mono ${!state.custom && mk===state.mat && fk===state.fit ? "cur":""}">${t}</td>`; }).join("")}</tr>`).join("")}</tbody></table></div>`;
+  const step1 = fold("res-d1","1. Seleção do ajuste", state.custom?"classes personalizadas":`${mat.nome} + ${fit.nome} → ${desigFit()}`, `
+    ${state.custom?`<div class="callout">As classes foram alteradas manualmente em <b>Classes avançadas</b>: ${esc(desigFit())}. A tabela abaixo mostra a sugestão padrão.</div>`:""}
+    <div class="kv" style="margin-bottom:12px">
+      ${kvItem("Material", mat.nome, false, mat.nome, mat.why)}
+      ${kvItem("Ajuste", state.custom?"Personalizado":fit.nome, false, fit.nome, state.custom?"":fit.desc)}
+    </div>
+    ${matrix}
+    <p class="hint">Escada de folga (da mais justa para a mais folgada): H/h → H/g → H/f → H/e → G/e. O ajuste define o ponto de partida e os graus (Justo 5/4, Médio 6/6, Folgado 7/8); o material sobe na escada.</p>`);
+  const step2 = fold("res-d2","2. Desvios e tolerâncias","ISO 965-1 · µm", `<div class="grid2" style="margin-top:0">
+      <div class="kv one">
+        <div class="sub-h">Macho ${esc(desigM())}</div>
+        ${kvItem("Desvio fundamental es", umSigned(u.esUm), true, fmtUm(u.esUm), u.esOrig)}
+        ${kvItem(`Td2(${state.ms.g2}) · tolerância do Ø médio`, umOrTxt(u.Td2Um), false, fmtUm(u.Td2Um), state.ms.g2===6?u.Td2Orig:`R40(${fmtIn(F_TD2E[state.ms.g2])} × Td2(6) = ${fmtUm(u.Td2_6)})`)}
+        ${kvItem(`Td(${state.ms.gd}) · tolerância do Ø maior`, umOrTxt(u.TdUm), false, fmtUm(u.TdUm), state.ms.gd===6?u.Td6Orig:`R40(${fmtIn(F_TDE[state.ms.gd])} × Td(6) = ${fmtUm(u.Td6)})`)}
+      </div>
+      <div class="kv one">
+        <div class="sub-h">Fêmea ${esc(desigF())}</div>
+        ${kvItem("Desvio fundamental EI", umSigned(u.EIUm), true, fmtUm(u.EIUm), u.EIOrig)}
+        ${kvItem(`TD2(${state.fs.g2}) · tolerância do Ø médio`, umOrTxt(u.TD2Um), false, fmtUm(u.TD2Um), state.fs.g2===6?u.TD2Orig:`R40(${fmtIn(F_TD2I[state.fs.g2])} × Td2(6) = ${fmtUm(u.Td2_6)})`)}
+        ${kvItem(`TD1(${state.fs.g1}) · tolerância do Ø menor`, umOrTxt(u.TD1Um), false, fmtUm(u.TD1Um), state.fs.g1===6?u.TD1Orig:`R40(${fmtIn(F_TD1[state.fs.g1])} × TD1(6) = ${fmtUm(u.TD1_6)})`)}
+      </div></div>`);
+  const step3 = fold("res-d3","3. Folgas", is3d?"ajuste ISO + folga da impressora":"no Ø médio (diametral)", `<div class="kv one">
+      ${kvItem("Folga mínima = D2 mín − d2 máx = EI − es", sgn(u.fitMin)+fmt(u.fitMin)+" mm", true, fmt(u.fitMin), `${fmtUm(u.EIUm)} − (${fmtUm(u.esUm)}) µm`)}
+      ${kvItem("Folga máxima = D2 máx − d2 mín", sgn(u.fitMax)+fmt(u.fitMax)+" mm", false, fmt(u.fitMax), "(EI + TD2) − (es − Td2)")}
+      ${kvItem("Folga mínima perpendicular ao flanco ≈ mín/4", sgn(u.folgaFlanco)+fmt(u.folgaFlanco)+" mm", false, fmt(u.folgaFlanco))}
+      ${kvItem("Jogo axial mínimo = mín · tan30°", sgn(u.jogoAxial)+fmt(u.jogoAxial)+" mm", false, fmt(u.jogoAxial))}
+      ${is3d ? `
+      ${kvItem("Erro da impressora", fmt(p3.err)+" mm", false, fmt(p3.err), "uma impressora")}
+      ${kvItem("Folga extra no flanco g = erro", fmt(p3.g)+" mm", false, fmt(p3.g))}
+      ${kvItem("δ radial na fêmea = 2 × g", fmt(p3.delta)+" mm", true, fmt(p3.delta), "flancos a 30°: deslocar δ dá δ/2 de folga no flanco")}
+      ${kvItem("Jogo axial extra = 2·δ·tan30°", fmt(p3.axial)+" mm", false, fmt(p3.axial))}
+      ${kvItem("Folga mínima total no Ø médio = mín + 2δ", sgn(cad.fitMin3d)+fmt(cad.fitMin3d)+" mm", true, fmt(cad.fitMin3d))}
+      ${kvItem("Engajamento radial = crista macho − crista fêmea", fmt(cad.eng)+" mm", false, fmt(cad.eng), "limite indicativo 0,2 mm")}
+      <div style="text-align:right">${engChip(cad)}</div>` : ""}
+    </div>`);
+  const step4 = fold("res-d4","4. Do modelo ao desenho","como os valores do resultado são obtidos", `<div class="kv one">
+      ${kvItem("Raio da crista do macho = Ø eixo / 2", fmt(cad.mCrest)+" mm", false, fmt(cad.mCrest), state.model==="mid"?"(d + es − Td/2)/2":"(d + es)/2")}
+      ${kvItem("Raio da hélice do macho rₚ = Ø d2 / 2", fmt(cad.mg.rp)+" mm", false, fmt(cad.mg.rp), state.model==="mid"?"(d2 + es − Td2/2)/2":"(d2 + es)/2")}
+      ${kvItem("Centro do R do macho = rₚ − √3·P/4 + 2R", fmt(cad.mC)+" mm", true, fmt(cad.mC), "o R tangencia os dois flancos de 60°")}
+      ${kvItem("h filete externo = crista − (centro − R)", fmt(cad.hExt)+" mm", true, fmt(cad.hExt))}
+      ${kvItem("Raio da hélice da fêmea Rₚ", fmt(cad.fg.rp)+" mm", false, fmt(cad.fg.rp), (state.model==="mid"?"(d2 + EI + TD2/2)/2":"(d2 + EI)/2") + (is3d?" + δ":""))}
+      ${kvItem("Centro do R da fêmea = Rₚ + √3·P/4 − 2R", fmt(cad.fC)+" mm", true, fmt(cad.fC), "R = P/16 (Ø P/8, como na planilha)")}
+      ${kvItem("h filete interno = (centro + R) − raio do furo", fmt(cad.hInt)+" mm", true, fmt(cad.hInt))}
+    </div>`, false);
+  const step5 = fold("res-d5","5. Limites para inspeção","peça usinada", `<div class="tbl-wrap"><table>
+      <thead><tr><th>Cota</th><th class="r">Mínimo</th><th class="r">Máximo</th><th class="r">Tolerância</th></tr></thead>
+      <tbody>
+        <tr><td>Macho · Ø maior d</td>${numTd(u.mG4)}${numTd(u.mH4)}${numTd(u.Td)}</tr>
+        <tr><td>Macho · Ø médio d2</td>${numTd(u.mG6)}${numTd(u.mH6)}${numTd(u.Td2)}</tr>
+        <tr><td>Fêmea · Ø menor D1 (furo)</td>${numTd(u.D1min)}${numTd(u.D1max)}${numTd(u.TD1)}</tr>
+        <tr><td>Fêmea · Ø médio D2</td>${numTd(u.D2min)}${numTd(u.D2max)}${numTd(u.TD2)}</tr>
+        <tr><td>Fêmea · Ø maior D</td>${numTd(u.Dmin)}<td class="r muted">—</td><td class="r muted">—</td></tr>
+      </tbody></table></div>
+      ${is3d?`<p class="hint">No 3D a fêmea modelada recebe ainda +2δ nos diâmetros (D1, D2 e D) por causa do erro da impressora.</p>`:""}`, !is3d);
+  const over = fold("res-over","Vista geral","proporção real entre diâmetro e passo", `<div class="plot">${drawOverview(r)}</div>`, false);
+
+  return `${head}
+    <div class="plot">${drawResult(r)}</div>
+    ${legend}
+    <div class="pcards">${macho}${femea}</div>
+    <p class="hint">Clique em um valor para copiar. Para modelar: extrude o Ø eixo, crie a hélice com o passo, desenhe o perfil de 60° com o R tangente posicionando o <b>centro do R</b> pela distância à <b>linha de centro</b>, e faça o corte por varredura. Na fêmea, o mesmo a partir do Ø furo.</p>
+    <div class="dev-h"><h2>Desenvolvimento</h2><span>cálculos e folgas que levam ao resultado acima</span></div>
+    ${step1}${step2}${step3}${step4}${step5}${over}`;
+}
+
+/* =====================================================================
+   ABA MÉTRICA
+   ===================================================================== */
+function tabMetrica(r){
+  const m = r.m;
+  const items = [
+    ["P","Passo","entrada",m.P,"mm",true],["d","Ø nominal","entrada",m.d,"mm",true],
+    ["d1","Ø menor do macho","d − 1,2268·P",m.d1,"mm"],["he","Altura do filete externo","0,61343·P",m.he,"mm"],
+    ["Rre","Raio do fundo externo","0,14434·P",m.Rre,"mm"],["S","Seção resistente","d1² · 0,7854",m.S,"mm²"],
+    ["D","Ø maior da fêmea","d + 2a",m.D,"mm"],["D1","Ø menor da fêmea","d − 1,0825·P",m.D1,"mm"],
+    ["hi","Altura do filete interno","0,5413·P + a",m.hi,"mm"],["Rri","Raio do fundo interno","0,073·P",m.Rri,"mm"],
+    ["d2 = D2","Ø médio (flancos)","d − 0,64953·P",m.d2,"mm"],["a","Folga de fundo","0,036·P",m.a,"mm"],
+    ["H","Triângulo fundamental","0,86603·P",m.H,"mm"],["H/8","","H / 8",m.H8,"mm"],["H/4","","H / 4",m.H4,"mm"],["H/6","","H / 6",m.H6,"mm"],
+  ];
+  return `<div class="sec-title"><h3>Rosca métrica ISO</h3><span>dimensões básicas (nominais) do perfil · clique para copiar</span></div>
+  <div class="fgrid">${items.map(([sym,nm,fx,v,u,inp])=>`
+    <div class="fc ${inp?"input":""}" data-copy="${esc(fmt(v))}">
+      <div class="sym"><b>${sym}</b><span>${u}</span></div>
+      <div class="nm">${nm||"&nbsp;"}</div><div class="val">${fmt(v)}</div><div class="fx">${fx}</div>
+    </div>`).join("")}</div>`;
+}
+
+/* =====================================================================
+   ABAS MACHO / FÊMEA (tabelas 1–9 da planilha)
+   ===================================================================== */
+const ROW_DESC_M = ["Passo P","Diâmetro da extrusão = d","Raio do cilindro = d/2","Diâmetro da hélice = d2","Raio da hélice = d2/2","Altura da linha da hélice ao topo = H/2","Diâmetro do círculo = 2 × Rre","Ângulo do perfil (constante)","Recuo da hélice a partir da face = P"];
+const ROW_DESC_F = ["Passo P","Diâmetro da hélice = D1","Diâmetro do furo = D1","Raio do furo/hélice = D1/2","Raio do diâmetro médio = d2/2","Altura = H/2","Diâmetro pequeno = P/8","Ângulo do perfil (constante)","Recuo da hélice a partir da face = P"];
+function refImgs(id, a, b, title){
+  return fold(id, "Referência CAD", `${title} · exemplo M15 × 0,75 da planilha; cotas numeradas = coluna Nº`,
+    `<div class="ref-imgs"><img loading="lazy" src="assets/${a}" alt="Esboço com cotas numeradas"><img loading="lazy" src="assets/${b}" alt="Esquema 2D"></div>`, false);
+}
+const cadHeads = (mE, mI) => `
+  <th class="r clickable ${state.model==="max"?"sel":""}" data-model="max">CAD: matéria máx.<br><span class="muted" style="font-weight:400">${mE}</span></th>
+  <th class="r">Tolerância T</th><th class="r">Mínimo</th><th class="r">Máximo</th>
+  <th class="r clickable ${state.model==="mid"?"sel":""}" data-model="mid">CAD: meio da tol.<br><span class="muted" style="font-weight:400">${mI}</span></th>`;
+
+function tabMacho(r){
+  const {m,u,is3d} = r;
+  const selE = state.model==="max" ? "sel" : "", selI = state.model==="mid" ? "sel" : "";
+  const R = (i, nom, tag, yes, E, F, G, H, I) => `<tr class="${yes?"yes":""}"><td class="idx">${i}</td><td class="desc">${ROW_DESC_M[i-1]}</td>${i===8?`<td class="num">60°</td>`:numTd(nom)}<td><span class="tag ${yes?"yes":""}">${tag}</span></td>${i===8?`<td class="num ${selE}">60°</td>`:numTd(E,selE)}${F==null?"<td></td>":numTd(F)}${G==null?"<td></td>":numTd(G)}${H==null?"<td></td>":numTd(H)}${i===8?`<td class="num ${selI}">60°</td>`:numTd(I,selI)}</tr>`;
+  const rows = [
+    R(1,m.P,"NÃO (nominal)",false,m.P,null,null,null,m.P),
+    R(2,m.d,"SIM: + es (Ø)",true,u.mE4,u.mF4,u.mG4,u.mH4,u.mI4),
+    R(3,m.d/2,"SIM: + es/2 (raio)",true,u.mE5,null,null,null,u.mI5),
+    R(4,m.d2,"SIM: + es (Ø)",true,u.mE6,u.mF6,u.mG6,u.mH6,u.mI6),
+    R(5,m.d2/2,"SIM: + es/2 (raio)",true,u.mE7,null,null,null,u.mI7),
+    R(6,m.H/2,"NÃO (nominal)",false,m.H/2,null,null,null,m.H/2),
+    R(7,2*m.Rre,"NÃO (nominal)",false,2*m.Rre,null,null,null,2*m.Rre),
+    R(8,60,"NÃO (nominal)",false,60,null,null,null,60),
+    R(9,m.P,"NÃO (nominal)",false,m.P,null,null,null,m.P),
+  ].join("");
+  return `<div class="callout">Macho <b>${esc(desigM())}</b> · es <b>${umSigned(u.esUm)}</b> · ${fitChip(u.fitType)}${is3d?" · No 3D o macho <b>não</b> recebe a folga da impressora (toda ela vai na fêmea).":""}</div>
+  <div class="sec-title"><h3>Valores para o desenho 3D (esboço da planilha) — rosca externa</h3><span>clique nos cabeçalhos CAD para escolher o modelo</span></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Nº</th><th>Descrição</th><th class="r">Nominal</th><th>Aplicar desvio es?</th>${cadHeads("nominal + es","meio")}</tr></thead>
+    <tbody>${rows}</tbody></table></div>
+  ${fold("mac-calc","Cálculos ISO 965-1","",`<div class="kv">
+    ${kvItem("Desvio es", umSigned(u.esUm), true, fmtUm(u.esUm), u.esOrig)}
+    ${kvItem("Td(6) · Ø maior", umOrTxt(u.Td6), false, fmtUm(u.Td6), u.Td6Orig)}
+    ${kvItem(`Td(${state.ms.gd}) usado`, umOrTxt(u.TdUm), true, fmtUm(u.TdUm))}
+    ${kvItem("Faixa de diâmetro (nº) · dg", `${u.faixa ?? "—"} · ${fmt(u.dg)} mm`, false, fmt(u.dg))}
+    ${kvItem("Td2(6) tabelado ISO", umOrTxt(u.Td2Tab), false, fmtUm(u.Td2Tab))}
+    ${kvItem("Td2(6) fórmula 90·P^0,4·dg^0,1", fmt(u.Td2F,2)+" µm", false, fmt(u.Td2F,2), "R40 → "+fmtUm(u.Td2R)+" µm")}
+    ${kvItem("Td2(6) base", umOrTxt(u.Td2_6), false, fmtUm(u.Td2_6), u.Td2Orig)}
+    ${kvItem(`Td2(${state.ms.g2}) usado`, umOrTxt(u.Td2Um), true, fmtUm(u.Td2Um))}
+  </div>`, false)}
+  ${notes("mac-notes",[
+    "Use a coluna “matéria máx.” (nominal + es) ou “meio da tol.” para modelar. A peça usinada pode variar entre Mínimo e Máximo.",
+    "Raios não têm tolerância própria: use a do diâmetro (T, Mínimo e Máximo só nas linhas de Ø).",
+    "Graus diferentes de 6 usam os fatores da ISO 965-1 (Td2: 3 = 0,5 · 4 = 0,63 · 5 = 0,8 · 7 = 1,25 · 8 = 1,6 · 9 = 2,0; Td: 4 = 0,63 · 8 = 1,6) com R40."
+  ])}
+  ${refImgs("mac-ref","macho-cotas.png","macho-usinagem-esquema.png","rosca externa")}`;
+}
+
+function tabFemea(r){
+  const {m,u,cad,p3,is3d} = r, dl = cad.dl;
+  const selE = state.model==="max" ? "sel" : "", selI = state.model==="mid" ? "sel" : "";
+  const shifted = !eq(u.EI, 0);
+  const tg = shifted ? "SIM: + EI" : "NÃO (EI = 0)";
+  // [nº, nominal, yes, tag, E, F, G, H, I, fator δ (0, 1 raio, 2 Ø)]
+  const def = [
+    [1,m.P,false,"NÃO",m.P,null,null,null,m.P,0],
+    [2,m.D1,shifted,shifted?tg+" (Ø)":tg,u.fE4,u.fF4,u.fG4,u.fH4,u.fI4,2],
+    [3,m.D1,shifted,shifted?tg+" (Ø)":tg,u.fE4,u.fF4,u.fG4,u.fH4,u.fI4,2],
+    [4,m.D1/2,shifted,shifted?"SIM: + EI/2 (raio)":tg,u.fE6,null,null,null,u.fI6,1],
+    [5,m.d2/2,shifted,shifted?"SIM: + EI/2 (raio)":tg,u.fE7,null,null,null,u.fI7,1],
+    [6,m.H/2,false,"NÃO",m.H/2,null,null,null,m.H/2,0],
+    [7,m.P/8,false,"NÃO",m.P/8,null,null,null,m.P/8,0],
+    [8,60,false,"NÃO",60,null,null,null,60,0],
+    [9,m.P,false,"NÃO",m.P,null,null,null,m.P,0],
+  ];
+  const rows = def.map(([i,nom,yes,tag,E,F,G,H,I,k])=>{
+    const cadV = (state.model==="mid"?I:E) + k*dl;
+    return `<tr class="${yes||(is3d&&k)?"yes":""}"><td class="idx">${i}</td><td class="desc">${ROW_DESC_F[i-1]}</td>${i===8?`<td class="num">60°</td>`:numTd(nom)}<td><span class="tag ${yes?"yes":""}">${tag}${is3d&&k?` · +${k===2?"2δ":"δ"}`:""}</span></td>${i===8?`<td class="num ${is3d?"":selE}">60°</td>`:numTd(E,is3d?"":selE)}${F==null?"<td></td>":numTd(F)}${G==null?"<td></td>":numTd(G)}${H==null?"<td></td>":numTd(H)}${i===8?`<td class="num ${is3d?"":selI}">60°</td>`:numTd(I,is3d?"":selI)}${is3d?(i===8?`<td class="num sel">60°</td>`:numTd(cadV,"sel")):""}</tr>`;
+  }).join("");
+  return `<div class="callout">Fêmea <b>${esc(desigF())}</b> · EI <b>${umSigned(u.EIUm)}</b> · ${fitChip(u.fitType)}${is3d?` · No 3D soma-se <b>δ = ${fmt(dl)} mm</b> (raio) pelo erro da impressora.`:""}</div>
+  <div class="sec-title"><h3>Valores para o desenho 3D (esboço da planilha) — rosca interna</h3><span>${is3d?"última coluna = modelo para impressão":"clique nos cabeçalhos CAD para escolher o modelo"}</span></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Nº</th><th>Descrição</th><th class="r">Nominal</th><th>Aplicar desvio?</th>${cadHeads("nominal + EI","meio")}${is3d?`<th class="r sel">CAD 3D<br><span class="muted" style="font-weight:400">${state.model==="mid"?"meio":"máx."} + δ</span></th>`:""}</tr></thead>
+    <tbody>${rows}</tbody></table></div>
+  <div class="grid2">
+    <div>
+      ${fold("fem-lim",`Limites da fêmea ${esc(desigF())}`,"mm (peça usinada)",`<div class="kv one">
+        ${kvItem("Ø menor D1: mínimo / máximo", `${fmt(u.D1min)} / ${fmt(u.D1max)}`, true, fmt(u.D1min))}
+        ${kvItem("Ø médio D2: mínimo / máximo", `${fmt(u.D2min)} / ${fmt(u.D2max)}`, true, fmt(u.D2min))}
+        ${kvItem("Ø maior D: mínimo", fmt(u.Dmin), false)}
+      </div>`)}
+    </div>
+    <div>
+      ${fold("fem-calc","Cálculos ISO 965-1","",`<div class="kv one">
+        ${kvItem("Desvio EI", umSigned(u.EIUm), true, fmtUm(u.EIUm), u.EIOrig)}
+        ${kvItem("TD1(6) · Ø menor", umOrTxt(u.TD1_6), false, fmtUm(u.TD1_6), u.TD1Orig)}
+        ${kvItem(`TD1(${state.fs.g1}) usado`, umOrTxt(u.TD1Um), true, fmtUm(u.TD1Um))}
+        ${kvItem("TD2(6) base", umOrTxt(u.TD2_6), false, fmtUm(u.TD2_6), u.TD2Orig)}
+        ${kvItem(`TD2(${state.fs.g2}) usado`, umOrTxt(u.TD2Um), true, fmtUm(u.TD2Um))}
+        ${is3d?kvItem("δ da impressora = 2 × erro", fmt(p3.delta)+" mm", true, fmt(p3.delta), `erro ${fmt(p3.err)} mm`):""}
+      </div>`, false)}
+    </div>
+  </div>
+  ${notes("fem-notes",[
+    "Fêmea H: EI = 0. Fêmea G: EI positivo (= |es| da posição g): aumenta D1 e D2, útil para revestimento ou mais folga.",
+    "TD1 vale para o Ø menor (furo, cotas 2 e 3) e TD2 para o Ø médio (cota 5).",
+    "Graus diferentes de 6: TD1 × (4 = 0,63 · 5 = 0,8 · 7 = 1,25 · 8 = 1,6); TD2 = k × Td2(6) com k = 0,85 · 1,06 · 1,32 · 1,7 · 2,12 (graus 4 a 8), arredondados R40.",
+    "Impressão 3D: δ é somado em raio nas cotas 4 e 5 e em diâmetro (2δ) nas cotas 2 e 3. Como os flancos têm 30° da vertical, deslocar δ na radial dá δ/2 de folga no flanco; por isso δ = 2 × erro."
+  ])}
+  ${refImgs("fem-ref","femea-cotas.png","femea-usinagem-esquema.png","rosca interna")}`;
+}
+
+/* =====================================================================
+   ABA ISO
+   ===================================================================== */
+function tabIso(r){
   const {m,u} = r;
-  const is3d = state.mode === "3d";
-  const mc = viewGeom(r, curView()).macho;
-  const valNote = is3d ? "valores nominais (o macho 3D não recebe folga)" : (state.vu==="u-mid" ? "valores do CAD no meio da tolerância" : "valores do CAD em matéria máxima (nominal + es)");
+  const cv = v => v==null ? '<span class="muted">—</span>' : v;
+  const ci = CLS_COL[state.ms.pos];
+  const p = ISO_P.map(row=>{
+    const on = eq(row[0], m.P);
+    return `<tr class="${on?"hl":""}"><td class="mono">${fmtIn(row[0])}</td>${[1,2,3].map(c=>`<td class="r mono ${on&&(c===ci||(c===1&&state.fs.pos==="G"))?"hl":""}">${cv(row[c])}</td>`).join("")}<td class="r mono">${row[4]}</td><td class="r mono">${cv(row[5])}</td></tr>`;
+  }).join("");
+  const fx = FAIXAS.map((f,i)=>`<tr class="${u.faixa===i+1?"hl":""}"><td class="mono">${i+1}</td><td class="r mono">${fmtIn(f[0])}</td><td class="r mono">${fmtIn(f[1])}</td><td class="r mono">${fmt(Math.sqrt(f[0]*f[1]))}</td></tr>`).join("");
+  const kt = TD2_TAB.map(row=>`<tr class="${u.keyRow===row?"hl":""}"><td class="mono">${row[0]}</td><td class="mono">${fmtIn(row[1])}</td><td class="r mono">${row[2]}</td><td class="r mono">${cv(row[3])}</td></tr>`).join("");
+  const used = [u.Td2Um,u.TD2Um,u.TdUm,u.TD1Um];
+  const r40 = R40.map(v=>`<span class="${used.includes(v)?"hl":""}">${v}</span>`).join("");
+  const gv = (f, base, n, six) => (f[n]==null) ? null : (n===6 ? six : (isNum(base) ? r40Round(f[n]*base) : null));
+  const gr = [3,4,5,6,7,8,9].map(n=>{
+    const a = gv(F_TD2E, u.Td2_6, n, u.Td2_6), b = gv(F_TDE, u.Td6, n, u.Td6), c = gv(F_TD2I, u.Td2_6, n, u.TD2_6), d1 = gv(F_TD1, u.TD1_6, n, u.TD1_6);
+    const c2 = (x, on) => `<td class="r mono ${on?"hl":""}">${x==null?'<span class="muted">—</span>':x}</td>`;
+    return `<tr><td class="mono">${n}</td>${c2(a, n===state.ms.g2)}${c2(b, n===state.ms.gd)}${c2(c, n===state.fs.g2)}${c2(d1, n===state.fs.g1)}</tr>`;
+  }).join("");
+  return `<div class="callout">Dados ISO 965-1 (µm). Fonte: tabelas publicadas em machiningdoctor.com; <b>conferir na norma para tolerância crítica.</b> Destaques = valores usados para M${fmtIn(m.d)} × ${fmtIn(m.P)}, ${esc(desigFit())}.</div>
+  <div class="sec-title"><h3>Tolerâncias por grau para esta rosca</h3><span>µm · grau 6 da tabela; demais = R40(fator × grau 6)</span></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Grau</th><th class="r">Td2 macho</th><th class="r">Td macho</th><th class="r">TD2 fêmea</th><th class="r">TD1 fêmea</th></tr></thead>
+    <tbody>${gr}</tbody></table></div>
+  <div class="grid2">
+    <div>${fold("iso-p","Desvios e tolerâncias por passo","es (valor absoluto) · EI(G) = |es(g)| · vazio = fórmula ISO",`<div class="tbl-wrap"><table>
+        <thead><tr><th>P (mm)</th><th class="r">g / G</th><th class="r">f</th><th class="r">e</th><th class="r">Td(6)</th><th class="r">TD1(6)</th></tr></thead>
+        <tbody>${p}</tbody></table></div>`)}</div>
+    <div>
+      ${fold("iso-fx","Faixas de diâmetro","dg = √(mín · máx)",`<div class="tbl-wrap"><table>
+        <thead><tr><th>Nº</th><th class="r">d &gt; (mm)</th><th class="r">até (mm)</th><th class="r">dg</th></tr></thead>
+        <tbody>${fx}</tbody></table></div>`)}
+      ${fold("iso-r40","Série R40","µm · arredondamento",`<div class="r40">${r40}</div>`, false)}
+    </div>
+  </div>
+  ${fold("iso-td2","Td2(6) e TD2(6) por faixa e passo","fora da tabela → fórmula 90·P^0,4·dg^0,1",`<div class="tbl-wrap" style="max-height:420px;overflow:auto"><table>
+    <thead><tr><th>Faixa</th><th>P (mm)</th><th class="r">Td2(6)</th><th class="r">TD2(6)</th></tr></thead>
+    <tbody>${kt}</tbody></table></div>`, false)}`;
+}
+
+/* =====================================================================
+   ABA INFO
+   ===================================================================== */
+function tabInfo(r){
+  const {m,u,cad,is3d} = r;
+  const mc = cad.mg;
+  const steps = [
+    "Escolha o processo no topo: <b>Usinagem</b> ou <b>Impressão 3D</b>.",
+    "Informe o <b>Ø nominal</b> e o <b>passo</b> (os atalhos M… já usam o passo grosso).",
+    "Escolha o <b>material</b>: Inox, Alumínio ou Latão. Ele define quanto de folga extra a rosca precisa.",
+    "Escolha o <b>ajuste</b>: Folgado, Médio ou Justo. O site combina material + ajuste e escolhe as classes ISO (ex.: 6H/6g).",
+    is3d ? "Confira o <b>erro da impressora</b> (padrão 0,1 mm). A fêmea recebe δ = 2 × erro a mais." : "Escolha o modelo CAD: <b>matéria máxima</b> (garante a montagem) ou <b>meio da tolerância</b> (alvo de fabricação).",
+    "Na aba <b>Resultados</b>, copie os parâmetros do macho e da fêmea para o CAD. O desenvolvimento dos cálculos fica logo abaixo.",
+    "Só se precisar de algo específico, abra <b>Classes avançadas</b> no fim do painel para escolher posição e grau (e, f, g, h, G, H) ou um desvio personalizado."
+  ];
+  const resItems = [
+    ["Ø eixo","Diâmetro externo do macho (crista). É o cilindro que você extruda antes de cortar a rosca."],
+    ["h filete (externo)","Altura total do filete do macho: da crista até o fundo do arredondamento."],
+    ["R (macho)","Raio do arredondamento do fundo do macho, tangente aos dois flancos de 60°. Dado como raio, não diâmetro."],
+    ["Centro do R → linha de centro","Distância radial do eixo da peça até o centro do R. Com ela o R fica totalmente definido no esboço, sem depender de outras cotas."],
+    ["Ø furo","Diâmetro do pré-furo da fêmea (crista dos filetes internos)."],
+    ["h filete (interno)","Altura total do filete da fêmea: da crista (furo) até o fundo do arredondamento."],
+    ["R (fêmea)","Raio do fundo da rosca interna (P/16, igual ao Ø P/8 da planilha)."],
+    ["Passo","Distância axial entre dois filetes; também é o passo da hélice."],
+  ].map(([k,v])=>`<div class="icard"><h4>${k}</h4><p>${v}</p></div>`).join("");
+  const matCards = Object.values(MATS).map(M=>`<div class="icard"><h4>${M.nome} · ${posTxt(M.shift)}</h4><p>${M.why}</p></div>`).join("")
+    + Object.values(FITS).map(F=>`<div class="icard em"><h4>${F.nome} · graus ${F.gF} (fêmea) / ${F.gM} (macho)</h4><p>${F.desc}</p></div>`).join("");
   const cotas = [
-    [1,"Passo P",fmt(m.P),"Distância axial entre dois filetes. No esboço é a largura do triângulo fundamental na linha de construção (traço-ponto) que fica H/2 acima da hélice (cota 6), e não no topo do perfil sólido.","Passo da hélice e largura da linha de construção."],
-
-    [2,"Ø da extrusão d",fmt(2*mc.rc),"Ø externo do macho: o cilindro antes de cortar a rosca. É o que você mede com paquímetro na crista dos filetes."+(is3d?"":" Na usinagem já inclui o desvio es."),"Extrusão do cilindro."],
-    [3,"Raio do cilindro d/2",fmt(mc.rc),"A mesma cota 2 em raio. No esboço, o contorno sólido do perfil fecha nesta linha, rente ao topo do cilindro.","Linha superior do perfil, a partir do eixo."],
-    [4,"Ø da hélice d2",fmt(2*mc.rp),"Ø médio (de flanco): onde a largura do filete é igual à largura do vão (P/2). É a cota que realmente define o encaixe macho × fêmea.","Diâmetro da hélice de varredura."],
-    [5,"Raio da hélice d2/2",fmt(mc.rp),"Posição da linha da hélice no esboço. O perfil de corte é centrado nesta linha.","Linha de construção do esboço."],
-    [6,"Altura H/2",fmt(m.H/2),"Distância da linha da hélice até o topo do triângulo fundamental. Ali o triângulo tem largura exatamente P.","Posiciona a linha superior do triângulo."],
-    [7,"Ø do círculo 2·Rre",fmt(2*mc.R),"Arredondamento do fundo do filete (raiz). Tangencia os dois flancos e evita a ponta viva, reduzindo concentração de tensão e trinca.","Círculo tangente aos flancos na ponta."],
-    [8,"Ângulo 60°","60°","Ângulo entre os flancos do perfil métrico ISO. Constante para qualquer passo.","Ângulo entre as duas linhas do triângulo."],
-    [9,"Recuo P","" + fmt(m.P),"O perfil começa P fora da face do cilindro, para que o corte já entre “cheio” e a entrada da rosca saia limpa.","Início da hélice antes da face."],
-  ];
-  const cotaRows = cotas.map(([n,nm,v,what,cad])=>`<tr><td class="idx"><span class="nb">${n}</span></td><td class="desc"><b style="font-weight:500">${nm}</b></td><td class="why">${what}</td><td class="why">${cad}</td><td class="num" data-copy="${esc(v)}">${v}</td></tr>`).join("");
-
-  const steps = is3d ? [
-    "Informe <b>passo P</b> e <b>Ø nominal d</b> no painel (ou use os atalhos M3…M24).",
-    "Informe o <b>erro da impressora</b> (desvio típico das suas peças, ex.: 0,1 mm) e os fatores <b>k</b> mín./máx. (1,0 a 1,5).",
-    "Escolha o cenário no topo do perfil e veja se a avaliação dá <b>OK</b>. Se aparecer ATENÇÃO ou INVIÁVEL, aumente o passo antes de aumentar a folga.",
-    "Modele o <b>macho</b> com os valores da aba <b>Macho 3D</b> (todos nominais) e a <b>fêmea</b> com a coluna do cenário escolhido na aba <b>Fêmea 3D</b>.",
-    "Imprima um trecho curto (3 a 4 voltas), teste o encaixe e ajuste o <b>k</b> se ficar justo ou folgado demais."
-  ] : [
-    "Informe <b>passo P</b> e <b>Ø nominal d</b>. Passos fora da tabela ISO 965-1 não têm desvios definidos.",
-    "Escolha a <b>classe do macho</b> e a <b>classe da fêmea</b> pelos atalhos (Fino/Médio/Grosso) ou monte grau + posição manualmente. Padrão geral: <b>6H/6g</b>.",
-    "Confira o <b>ajuste resultante</b>: com folga, transição ou interferência, e a folga mín./máx. no Ø médio.",
-    "Escolha o modelo CAD: <b>matéria máxima</b> (peça no limite “mais cheio”, garante que monta) ou <b>meio da tolerância</b> (valor alvo da fabricação).",
-    "Modele com as colunas das abas <b>Macho usinagem</b> e <b>Fêmea usinagem</b>. As colunas <b>Mínimo</b> e <b>Máximo</b> são a faixa aceitável na inspeção."
-  ];
-  const cadSteps = [
-    "Extrude o cilindro com o <b>Ø d</b> <span class=\"nb\">2</span> no comprimento da rosca.",
-    "Crie a <b>hélice</b> com passo <b>P</b> <span class=\"nb\">1</span>, diâmetro <b>d2</b> <span class=\"nb\">4</span>, começando <b>P fora da face</b> <span class=\"nb\">9</span> e com comprimento = rosca + 2P.",
-    "Num plano que passa pelo eixo, desenhe o <b>triângulo de corte</b>: centro na linha da hélice <span class=\"nb\">5</span>, linha superior a <b>H/2</b> <span class=\"nb\">6</span> acima com largura <b>P</b> <span class=\"nb\">1</span>, flancos a <b>60°</b> <span class=\"nb\">8</span> e o <b>círculo</b> <span class=\"nb\">7</span> tangente na ponta.",
-    "Faça um <b>corte por varredura</b> (swept cut) do perfil ao longo da hélice. Confira medindo o Ø externo (= cota 2)."
-  ];
-
-  // interpretação do macho
-  let interp;
-  if (is3d){
-    interp = `<div class="icards">
-      <div class="icard em"><h4>O macho é o gabarito</h4><p>No 3D o macho fica <b>nominal</b>: d, d2, Rre e o perfil são os da norma. Toda a folga vai para a fêmea, então o mesmo macho serve para qualquer cenário de erro.</p></div>
-      <div class="icard"><h4>Como conferir a peça impressa</h4><p>Meça o <b>Ø externo</b> com paquímetro e compare com a cota 2 (${fmt(m.d)} mm). A diferença mostra o erro real da sua impressora; use esse valor no campo “Erro”.</p></div>
-      <div class="icard"><h4>Se a rosca não entrar</h4><p>Aumente <b>k</b> (até 1,5) ou use o cenário com erro maior. Se o engajamento ficar abaixo de 0,2 mm, a solução é <b>aumentar o passo</b>, não a folga.</p></div>
-      <div class="icard"><h4>Se ficar folgada demais</h4><p>Diminua <b>k</b> ou o erro. O <b>jogo axial</b> (2·δ·tan30°) indica quanto a peça “anda” para frente e para trás quando montada.</p></div>
-      <div class="icard"><h4>Dividir a folga</h4><p>Alternativa: tire δ/2 das cotas 2, 3, 4 e 5 do macho e use δ/2 na fêmea. Útil quando macho e fêmea são ambos impressos e o erro afeta os dois.</p></div>
-      <div class="icard"><h4>Orientação de impressão</h4><p>Com o eixo da rosca na vertical, os flancos saem mais fiéis. Na horizontal, o perfil distorce pelas camadas; prefira passos maiores (P ≥ 1,5).</p></div>
-    </div>`;
-  } else {
-    const ms = state.ms;
-    const brk = ms.pos==="c"
-      ? `<div class="part"><span class="big">es${sNum(ms.es)}</span><span>Desvio personalizado<br>${ms.es>0?"macho maior que o nominal → interferência":"em µm aplicado a d e d2"}</span></div>
-         <div class="part"><span class="big">${ms.g2}</span><span>Grau do Ø médio d2<br>Td2 = ${fmtUm(u.Td2Um)} µm</span></div>
-         <div class="part"><span class="big">${ms.gd}</span><span>Grau do Ø maior d<br>Td = ${fmtUm(u.TdUm)} µm</span></div>`
-      : `<div class="part"><span class="big">${ms.g2}</span><span>Grau de tolerância do Ø médio d2<br>Td2 = ${fmtUm(u.Td2Um)} µm</span></div>
-         <div class="part"><span class="big">${ms.pos}</span><span>Posição da tolerância<br>es = ${umSigned(u.esUm)}</span></div>
-         <div class="part"><span class="big">${ms.gd}${ms.pos}</span><span>Grau do Ø maior d${ms.gd===ms.g2?" (igual ao d2,<br>por isso a classe se escreve só ${ms.g2}${ms.pos})":""}<br>Td = ${fmtUm(u.TdUm)} µm</span></div>`;
-    interp = `<p class="hint" style="margin:0 0 10px">Classe atual do macho: <b>${esc(desigM())}</b></p>
-    <div class="desig-break">${brk}</div>
-    <div class="icards">
-      <div class="icard em"><h4>Número = grau (qualidade)</h4><p>Quanto <b>menor</b> o número, mais <b>estreita</b> a tolerância: 3–4 = fino (rosca de precisão), 5–6 = médio (uso geral), 7–9 = grosso (peças sujas, revestidas ou de baixa precisão).</p></div>
-      <div class="icard em"><h4>Letra = posição (folga)</h4><p><b>h</b> = sem folga (es = 0). <b>g</b> = pouca folga (padrão). <b>f</b> e <b>e</b> = mais folga, para revestimento (zinco, pintura) ou montagem rápida. Na fêmea: <b>H</b> = EI 0 e <b>G</b> = EI positivo.</p></div>
-      <div class="icard"><h4>Matéria máxima × meio da tolerância</h4><p><b>Matéria máxima</b> é o macho no limite “mais gordo” (d máx., d2 máx.): se monta assim, monta sempre. <b>Meio da tolerância</b> é o alvo de fabricação e o modelo mais realista.</p></div>
-      <div class="icard"><h4>Mínimo e Máximo</h4><p>São a faixa aceitável da peça usinada. d2 entre <b>${fmt(u.mG6)}</b> e <b>${fmt(u.mH6)}</b> mm e d entre <b>${fmt(u.mG4)}</b> e <b>${fmt(u.mH4)}</b> mm. Fora disso a peça é rejeitada.</p></div>
-      <div class="icard"><h4>Como inspecionar</h4><p><b>Anel calibrador</b> passa/não-passa da classe (ex.: 6g) para aceitar o lote. <b>Micrômetro de 3 arames</b> mede o d2. <b>Micrômetro</b> ou paquímetro mede o d.</p></div>
-      <div class="icard"><h4>Lendo o ajuste</h4><p><b>Com folga</b>: sempre monta. <b>Transição</b>: depende das peças, pode ficar justo. <b>Interferência</b>: precisa de força, aquecimento ou trava; fora da ISO 965-1.</p></div>
-    </div>`;
-  }
-
-  const femRows = [
-    [1,"Passo P","Igual ao macho."],
-    [2,"Ø da hélice = D1","Diâmetro da hélice de varredura da fêmea (no Ø menor)."+(is3d?" Recebe +2δ.":" Recebe EI.")],
-    [3,"Ø do furo = D1","Pré-furo antes de cortar a rosca (Ø menor da fêmea)."+(is3d?" Recebe +2δ.":" Tolerância TD1.")],
-    [4,"Raio D1/2","Cota 3 em raio, para o esboço."],
-    [5,"Raio d2/2","Linha média do perfil (Ø médio D2). Define o encaixe."+(is3d?" Recebe +δ.":" Tolerância TD2.")],
-    [6,"Altura H/2","Da linha média até a base do triângulo de corte."],
-    [7,"Ø pequeno P/8","Arredondamento na ponta do perfil (fundo da rosca da fêmea, no Ø maior)."],
-    [8,"Ângulo 60°","Igual ao macho."],
-    [9,"Recuo P","A hélice começa P fora da face."],
-  ].map(([n,nm,t])=>`<tr><td class="idx"><span class="nb">${n}</span></td><td class="desc"><b style="font-weight:500">${nm}</b></td><td class="why">${t}</td></tr>`).join("");
-
+    [1,"Passo P",fmt(m.P),"Largura do triângulo fundamental na linha de construção (traço-ponto) H/2 acima da hélice."],
+    [2,"Ø da extrusão d",fmt(2*mc.rc),"Ø externo do macho (cilindro antes do corte)."],
+    [3,"Raio do cilindro d/2",fmt(mc.rc),"Linha onde o perfil sólido fecha, rente ao topo do cilindro."],
+    [4,"Ø da hélice d2",fmt(2*mc.rp),"Ø médio, onde filete = vão (P/2). Define o encaixe."],
+    [5,"Raio da hélice d2/2",fmt(mc.rp),"Linha de centro do perfil de corte no esboço."],
+    [6,"Altura H/2",fmt(m.H/2),"Da hélice até a linha de construção de largura P."],
+    [7,"Ø do círculo 2·Rre",fmt(2*mc.R),"Arredondamento do fundo, tangente aos flancos."],
+    [8,"Ângulo 60°","60°","Ângulo entre flancos do perfil métrico."],
+    [9,"Recuo P",fmt(m.P),"A hélice começa P antes da face para o corte sair limpo."],
+  ].map(([n,nm,v,t])=>`<tr><td class="idx"><span class="nb">${n}</span></td><td class="desc"><b style="font-weight:500">${nm}</b></td><td class="why">${t}</td><td class="num" data-copy="${esc(v)}">${v}</td></tr>`).join("");
+  const ms = state.ms;
+  const brk = ms.pos==="c"
+    ? `<div class="part"><span class="big">es${sNum(ms.es)}</span><span>Desvio personalizado</span></div>`
+    : `<div class="part"><span class="big">${ms.g2}</span><span>Grau do Ø médio d2<br>Td2 = ${fmtUm(u.Td2Um)} µm</span></div>
+       <div class="part"><span class="big">${ms.pos}</span><span>Posição<br>es = ${umSigned(u.esUm)}</span></div>
+       <div class="part"><span class="big">${ms.gd}${ms.pos}</span><span>Grau do Ø maior d<br>Td = ${fmtUm(u.TdUm)} µm</span></div>`;
   const gloss = [
     ["P","Passo: avanço axial por volta"],["d","Ø nominal / Ø maior do macho"],["d1","Ø menor (fundo) do macho"],
     ["d2 = D2","Ø médio, onde filete = vão"],["D1","Ø menor da fêmea (furo)"],["D","Ø maior da fêmea"],
-    ["H","Altura do triângulo fundamental = 0,866·P"],["Rre / Rri","Raio do fundo externo / interno"],
-    ["he / hi","Altura do filete externo / interno"],["a","Folga de fundo = 0,036·P"],["S","Seção resistente do macho (mm²)"],
-    ...(is3d ? [["erro","Desvio típico da impressora (±)"],["k","Fator de segurança da folga (1,0–1,5)"],["g","Folga real no flanco = k × erro"],["δ","Deslocamento radial do perfil da fêmea = 2g"],["engaj.","Altura de contato que sobra = 0,5413·P − δ"]]
-           : [["es","Desvio superior do macho (negativo = folga)"],["EI","Desvio inferior da fêmea (positivo = folga)"],["Td / Td2","Tolerância do Ø maior / médio do macho"],["TD1 / TD2","Tolerância do Ø menor / médio da fêmea"],["grau","Número da classe: largura da tolerância"],["posição","Letra da classe: distância até o nominal"],["dg","Ø médio geométrico da faixa ISO"],["R40","Série de números preferenciais para arredondar"]])
+    ["H","Triângulo fundamental = 0,866·P"],["h filete","Altura total do filete do modelo"],["R","Raio do fundo do filete"],
+    ["es","Desvio superior do macho (negativo = folga)"],["EI","Desvio inferior da fêmea (positivo = folga)"],
+    ["Td / Td2","Tolerância do Ø maior / médio do macho"],["TD1 / TD2","Tolerância do Ø menor / médio da fêmea"],
+    ["grau","Número da classe: largura da tolerância"],["posição","Letra da classe: distância até o nominal"],
+    ["δ","Folga radial extra da fêmea no 3D = 2 × erro"],["R40","Série de números preferenciais para arredondar"]
   ].map(([k,v])=>`<div><b>${k}</b><span>${v}</span></div>`).join("");
 
-  return `<div class="callout"><b>Info · ${is3d?"Impressão 3D":"Usinagem"}.</b> O conteúdo segue o modo selecionado no topo. As cotas numeradas são as mesmas da coluna Nº das tabelas e do esboço CAD da planilha.</div>
+  return `<div class="callout"><b>Info.</b> Explica o resultado, os materiais e ajustes, e como modelar e interpretar o macho. Os valores mostrados seguem a rosca e o modo atuais.</div>
   ${fold("info-uso","Como usar","passo a passo",`<ol class="steps">${steps.map(s=>`<li>${s}</li>`).join("")}</ol>`)}
-  ${fold("info-sketch","Esboço do macho","cotas numeradas · "+valNote,`<div class="plot">${machoSketch(r)}</div>
+  ${fold("info-res","Desenho de resultados","o que cada indicação significa",`<div class="icards">${resItems}</div>`)}
+  ${fold("info-mat","Materiais e ajustes","como a escolha muda as folgas",`<div class="icards">${matCards}</div>
+    <p class="hint">Escada de folga: H/h → H/g → H/f → H/e → G/e. Folgado começa em H/f, Médio em H/g e Justo em H/h; o material sobe na escada. É uma recomendação de projeto (não normativa). Se a sua prática for outra, ajuste em Classes avançadas.</p>`)}
+  ${fold("info-sketch","Esboço do macho (cotas 1–9 das abas Macho/Fêmea)","valores do CAD "+modelName(),`<div class="plot">${machoSketch(r)}</div>
     <div class="tbl-wrap" style="margin-top:14px"><table>
-      <thead><tr><th>Nº</th><th>Cota</th><th>O que significa</th><th>Uso no CAD</th><th class="r">Valor atual</th></tr></thead>
-      <tbody>${cotaRows}</tbody></table></div>`)}
-  ${fold("info-cad","Modelando o macho no CAD","SolidWorks, Fusion, Onshape…",`<ol class="steps">${cadSteps.map(s=>`<li>${s}</li>`).join("")}</ol>`)}
-  ${fold("info-interp","Como interpretar o macho", is3d?"impressão 3D":"classes de tolerância ISO 965-1", interp)}
-  ${fold("info-femea","Cotas da fêmea","mesma numeração, perfil invertido",`<div class="tbl-wrap"><table>
-    <thead><tr><th>Nº</th><th>Cota</th><th>O que significa</th></tr></thead><tbody>${femRows}</tbody></table></div>`, false)}
+      <thead><tr><th>Nº</th><th>Cota</th><th>O que significa</th><th class="r">Valor</th></tr></thead><tbody>${cotas}</tbody></table></div>`, false)}
+  ${fold("info-interp","Como interpretar o macho","classe ISO 965-1",`
+    <p class="hint" style="margin:0 0 10px">Classe atual do macho: <b>${esc(desigM())}</b></p>
+    <div class="desig-break">${brk}</div>
+    <div class="icards">
+      <div class="icard em"><h4>Número = grau (qualidade)</h4><p>Quanto <b>menor</b>, mais <b>estreita</b> a tolerância: 3–4 fino, 5–6 médio, 7–9 grosso.</p></div>
+      <div class="icard em"><h4>Letra = posição (folga)</h4><p><b>h</b> sem folga, <b>g</b> pouca (padrão), <b>f</b> e <b>e</b> mais folga. Na fêmea: <b>H</b> = EI 0, <b>G</b> = EI positivo.</p></div>
+      <div class="icard"><h4>Matéria máxima × meio da tolerância</h4><p>Matéria máxima é o macho no limite “mais gordo”: se monta assim, monta sempre. Meio da tolerância é o alvo de fabricação.</p></div>
+      <div class="icard"><h4>Mínimo e Máximo</h4><p>d2 entre <b>${fmt(u.mG6)}</b> e <b>${fmt(u.mH6)}</b> mm; d entre <b>${fmt(u.mG4)}</b> e <b>${fmt(u.mH4)}</b> mm. Fora disso a peça é rejeitada.</p></div>
+      <div class="icard"><h4>Como inspecionar</h4><p><b>Anel calibrador</b> passa/não-passa da classe; <b>micrômetro de 3 arames</b> para o d2; micrômetro ou paquímetro para o d.</p></div>
+      <div class="icard"><h4>No 3D</h4><p>O macho segue o mesmo modelo da usinagem; a folga da impressora vai toda na fêmea. Meça o Ø eixo impresso: a diferença para o valor do resultado é o erro real da sua impressora.</p></div>
+    </div>`, false)}
   ${fold("info-gloss","Glossário","símbolos usados no site",`<div class="gloss">${gloss}</div>`, false)}`;
 }
 
-const TABS = {metrica:tabMetrica, m3d:tabM3d, f3d:tabF3d, mus:tabMus, fus:tabFus, iso:tabIso, info:tabInfo};
+const TAB_FN = {res:tabRes, info:tabInfo, metrica:tabMetrica, macho:tabMacho, femea:tabFemea, iso:tabIso};
 
 /* =====================================================================
    RENDER / EVENTOS
    ===================================================================== */
 const $ = id => document.getElementById(id);
 const numInputs = [...document.querySelectorAll("input[data-num]")];
-
 function presetChips(groups, cur){
   return groups.map(([g,list])=>`<span class="chip-group">${g}</span>${list.map(c=>`<button class="chip ${c===cur?"on":""}" data-preset="${c}">${c}</button>`).join("")}`).join("");
 }
-function curTab(){ return state.mode==="3d" ? state.tab3 : state.tabU; }
-
-function syncInputs(){
+function syncInputs(r){
   numInputs.forEach(el=>{ if (document.activeElement !== el) el.value = getK(el.dataset.num); });
-  $("rgD").value = state.d;
+  $("chipsD").innerHTML = COARSE.map(([d,p])=>`<button class="chip ${eq(d,state.d)&&eq(p,state.P)?"on":""}" data-d="${d}" data-pp="${p}" title="M${d} × ${fmtIn(p)}">M${d}</button>`).join("");
   $("chipsP").innerHTML = PITCH_CHIPS.map(v=>`<button class="chip ${eq(v,state.P)?"on":""}" data-p="${v}">${fmtIn(v)}</button>`).join("");
-  $("chipsD").innerHTML = D_CHIPS.map(v=>`<button class="chip ${eq(v,state.d)?"on":""}" data-d="${v}">M${v}</button>`).join("");
   $("presetM").innerHTML = presetChips(PRESET_M, state.ms.pos==="c" ? "" : desigM());
   $("presetF").innerHTML = presetChips(PRESET_F, state.fs.pos==="c" ? "" : desigF());
-  $("presetM").dataset.which = "ms"; $("presetF").dataset.which = "fs";
   document.querySelectorAll(".seg[data-key]").forEach(sg=>{
     const v = String(getK(sg.dataset.key));
-    sg.querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.v===v));
+    sg.querySelectorAll("button").forEach(b=>b.classList.toggle("on", sg.dataset.key==="fit" ? (!state.custom && b.dataset.v===v) : b.dataset.v===v));
   });
   $("fEs").hidden = state.ms.pos!=="c";
   $("fEi").hidden = state.fs.pos!=="c";
+  $("btnReset").hidden = !state.custom;
   document.querySelectorAll("#modeSw button").forEach(b=>{ const on = b.dataset.mode===state.mode; b.classList.toggle("on",on); b.setAttribute("aria-selected",on); });
   document.querySelectorAll("[data-mode-only]").forEach(el=> el.hidden = el.dataset.modeOnly !== state.mode);
-  const tabs = state.mode==="3d" ? TABS3 : TABSU;
-  $("tabs").innerHTML = tabs.map(([k,l])=>`<button class="tab ${k===curTab()?"on":""}" data-t="${k}" role="tab" aria-selected="${k===curTab()}">${l}</button>`).join("");
+  $("tabs").innerHTML = TABS.map(([k,l],i)=>`<button class="tab ${k===state.tab?"on":""} ${i===2?"sep":""}" data-t="${k}" role="tab" aria-selected="${k===state.tab}">${l}</button>`).join("");
   $("bRosca").textContent = `M${fmtIn(state.d)} × ${fmtIn(state.P)}`;
-  $("bMacho").textContent = desigM();
-  $("bFemea").textContent = desigF();
+  $("bMat").textContent = MATS[state.mat].nome;
+  $("bFit").textContent = state.custom ? "Personalizado" : FITS[state.fit].nome;
+  $("bAdv").textContent = desigFit();
+  $("matHint").textContent = MATS[state.mat].why;
+  $("fitHint").textContent = state.custom ? "Classes definidas manualmente em Classes avançadas." : FITS[state.fit].desc;
+  const {u, cad, p3, is3d} = r;
+  $("bFolga").textContent = FIT[u.fitType].t.replace("Com ","");
+  $("fitBox").innerHTML = `
+    <div class="ln"><span>Classes</span><b>${esc(desigFit())}</b></div>
+    <div class="ln"><span>Tipo</span>${fitChip(u.fitType)}</div>
+    <div class="ln"><span>Folga mín. Ø médio</span><b>${sgn(u.fitMin)}${fmt(u.fitMin)} mm</b></div>
+    <div class="ln"><span>Folga máx. Ø médio</span><b>${sgn(u.fitMax)}${fmt(u.fitMax)} mm</b></div>
+    ${is3d?`<hr><div class="ln"><span>δ impressora (raio)</span><b>${fmt(p3.delta)} mm</b></div>
+    <div class="ln"><span>Folga mín. total</span><b>${sgn(cad.fitMin3d)}${fmt(cad.fitMin3d)} mm</b></div>
+    <div class="ln"><span>Engajamento</span>${engChip(cad)}</div>`:""}`;
 }
 
 function render(){
-  const tabs = state.mode==="3d" ? TABS3 : TABSU;
-  if (!tabs.some(t=>t[0]===curTab())){ if (state.mode==="3d") state.tab3 = "f3d"; else state.tabU = "mus"; }
+  syncClasses();
   const r = calc(state);
-  $("desig").textContent = `M${fmtIn(state.d)} × ${fmtIn(state.P)}` + (state.mode==="us" ? ` – ${desigF()}/${desigM()}` : "");
+  $("desig").textContent = `M${fmtIn(state.d)} × ${fmtIn(state.P)} · ${desigFit()}`;
   const w = [];
   if (r.m.d1 <= 0 || r.m.D1 <= 0) w.push("Passo grande demais para este diâmetro (Ø menor ≤ 0).");
-  if (state.mode==="us"){
-    if (!r.u.row) w.push("Passo fora da tabela ISO 965-1: desvios e Td indisponíveis.");
-    if (!r.u.faixa) w.push("Ø fora das faixas ISO 965-1 (d ≤ 0,99 mm).");
-    if (state.ms.pos!=="c" && r.u.esUm==="n/d") w.push(`Posição ${state.ms.pos} não definida na norma para P = ${fmtIn(state.P)} (es = 0 usado).`);
-  }
+  if (!r.u.row) w.push("Passo fora da tabela ISO 965-1: desvios e tolerâncias pelas fórmulas da norma.");
+  if (!r.u.faixa) w.push("Ø fora das faixas ISO 965-1 (d ≤ 0,99 mm).");
   $("geoWarn").innerHTML = w.join("<br>"); $("geoWarn").classList.toggle("show", w.length>0);
-  syncInputs();
-  renderScenarios(r);
-  renderStats(r);
-  renderFitBox(r);
-  if (r.m.d1 > 0 && r.m.D1 > 0){ drawProfile(r); drawOverview(r); }
-  $("tabBody").innerHTML = TABS[curTab()](r);
+  syncInputs(r);
+  if (r.m.d1 > 0 && r.m.D1 > 0) $("tabBody").innerHTML = TAB_FN[state.tab](r);
+  else $("tabBody").innerHTML = `<div class="callout">Geometria inválida para M${fmtIn(state.d)} × ${fmtIn(state.P)}.</div>`;
   persist();
 }
 
-/* chevrons estáticos */
 document.querySelectorAll("summary .chev").forEach(c=>{ if (!c.innerHTML) c.innerHTML = CHEV; });
-/* estado de recolhimento salvo */
 document.querySelectorAll("details[data-fold]").forEach(d=>{ const v = state.col[d.dataset.fold]; if (v!==undefined) d.open = v; });
 document.addEventListener("toggle", e=>{
   const d = e.target;
@@ -1483,31 +1404,29 @@ numInputs.forEach(el=>{
     const v = parseNum(el.value);
     const ok = isFinite(v) && (neg || v >= 0) && ((k!=="P" && k!=="d") || v > 0);
     el.parentElement.classList.toggle("bad", !ok);
-    if (ok){ setK(k, v); render(); }
+    if (ok){ setK(k, v); if (k.startsWith("ms.")||k.startsWith("fs.")) state.custom = true; render(); }
   });
   el.addEventListener("blur", ()=>{ el.parentElement.classList.remove("bad"); el.value = getK(k); });
 });
-$("rgD").addEventListener("input", e=>{ state.d = +e.target.value; render(); });
 
 document.addEventListener("click", e=>{
   const t = e.target;
   let b;
   if ((b = t.closest("#modeSw button"))){ state.mode = b.dataset.mode; render(); return; }
+  if ((b = t.closest("[data-d]"))){ state.d = +b.dataset.d; if (b.dataset.pp) state.P = +b.dataset.pp; render(); return; }
   if ((b = t.closest("[data-p]"))){ state.P = +b.dataset.p; render(); return; }
-  if ((b = t.closest("[data-d]"))){ state.d = +b.dataset.d; render(); return; }
-  if ((b = t.closest("[data-preset]"))){ applyPreset(b.parentElement.dataset.which, b.dataset.preset); render(); return; }
+  if ((b = t.closest("[data-preset]"))){ applyPreset(b.parentElement.dataset.which, b.dataset.preset); state.custom = true; render(); return; }
+  if ((b = t.closest("#btnReset"))){ state.custom = false; render(); return; }
   if ((b = t.closest(".seg[data-key] button"))){
     const key = b.parentElement.dataset.key, v = b.dataset.v;
+    if (key==="fit") state.custom = false;
+    if (key.startsWith("ms.")||key.startsWith("fs.")) state.custom = true;
     setK(key, /^\d+$/.test(v) ? +v : v); render(); return;
   }
-  if ((b = t.closest("#tabs .tab"))){ if (state.mode==="3d") state.tab3 = b.dataset.t; else state.tabU = b.dataset.t; render(); return; }
-  if ((b = t.closest("[data-view]"))){
-    const v = b.dataset.view;
-    if (v.startsWith("p")) state.v3 = v; else state.vu = v;
-    render(); return;
-  }
+  if ((b = t.closest("#tabs .tab"))){ state.tab = b.dataset.t; render(); return; }
+  if ((b = t.closest("[data-model]"))){ state.model = b.dataset.model; render(); return; }
   const c = t.closest("[data-copy]");
-  if (c && c.dataset.copy) copy(c.dataset.copy);
+  if (c && c.dataset.copy && c.dataset.copy!=="—") copy(c.dataset.copy);
 });
 
 let toastT;
